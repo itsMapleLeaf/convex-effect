@@ -1,0 +1,17 @@
+{
+	"name": "convex-effect",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"effect": "3.2.8",
+		"typescript": "5.4.5"
+	},
+	"peerDependencies": {
+		"convex": "*",
+		"effect": "*"
+	}
+}
