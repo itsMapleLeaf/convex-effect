@@ -8,7 +8,12 @@ import type {
 	QueryBuilder,
 } from "convex/server"
 import type { ObjectType, PropertyValidators } from "convex/values"
-import { Context, Effect, pipe } from "effect"
+import { Effect, pipe } from "effect"
+import {
+	ActionCtxService,
+	MutationCtxService,
+	QueryCtxService,
+} from "./services.ts"
 
 export type FunctionBuilderOptions<
 	Ctx,
@@ -32,19 +37,26 @@ export function configure<DataModel extends GenericDataModel>({
 	mutation: MutationBuilder<DataModel, "public">
 	action: ActionBuilder<DataModel, "public">
 }) {
-	class QueryCtxService extends Context.Tag("convex-effect:QueryCtxService")<
-		QueryCtxService,
-		GenericQueryCtx<DataModel>
-	>() {}
+	function getQueryCtx() {
+		return Effect.map(
+			QueryCtxService,
+			(init) => init() as GenericQueryCtx<DataModel>,
+		)
+	}
 
-	class MutationCtxService extends Context.Tag(
-		"convex-effect:MutationCtxService",
-	)<MutationCtxService, GenericMutationCtx<DataModel>>() {}
+	function getMutationCtx() {
+		return Effect.map(
+			MutationCtxService,
+			(init) => init() as GenericMutationCtx<DataModel>,
+		)
+	}
 
-	class ActionCtxService extends Context.Tag("convex-effect:ActionCtxService")<
-		ActionCtxService,
-		GenericActionCtx<DataModel>
-	>() {}
+	function getActionCtx() {
+		return Effect.map(
+			ActionCtxService,
+			(init) => init() as GenericActionCtx<DataModel>,
+		)
+	}
 
 	function effectQuery<Args extends PropertyValidators, Result>(
 		options: FunctionBuilderOptions<
@@ -59,7 +71,7 @@ export function configure<DataModel extends GenericDataModel>({
 			handler(ctx, args) {
 				return pipe(
 					options.handler(ctx, args),
-					Effect.provideService(QueryCtxService, ctx),
+					Effect.provideService(QueryCtxService, () => ctx),
 					Effect.runPromise,
 				)
 			},
@@ -79,8 +91,8 @@ export function configure<DataModel extends GenericDataModel>({
 			handler(ctx, args) {
 				return pipe(
 					options.handler(ctx, args),
-					Effect.provideService(QueryCtxService, ctx),
-					Effect.provideService(MutationCtxService, ctx),
+					Effect.provideService(QueryCtxService, () => ctx),
+					Effect.provideService(MutationCtxService, () => ctx),
 					Effect.runPromise,
 				)
 			},
@@ -100,7 +112,7 @@ export function configure<DataModel extends GenericDataModel>({
 			handler(ctx, args) {
 				return pipe(
 					options.handler(ctx, args),
-					Effect.provideService(ActionCtxService, ctx),
+					Effect.provideService(ActionCtxService, () => ctx),
 					Effect.runPromise,
 				)
 			},
@@ -108,6 +120,9 @@ export function configure<DataModel extends GenericDataModel>({
 	}
 
 	return {
+		getQueryCtx,
+		getMutationCtx,
+		getActionCtx,
 		effectQuery,
 		effectMutation,
 		effectAction,
