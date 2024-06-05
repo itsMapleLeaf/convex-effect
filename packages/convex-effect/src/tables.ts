@@ -35,17 +35,22 @@ export interface EffectTableConfig {
 	indexes: Record<string, Readonly<NonEmptyArray<EffectIndexEntry>>>
 }
 
+export type TableDefinitionWithConfig<Config extends EffectTableConfig> =
+	Record<typeof TableConfig, Config>
+
 export function tableConfigFrom<Config extends EffectTableConfig>(
-	definition: Record<typeof TableConfig, Config>,
+	definition: TableDefinitionWithConfig<Config>,
 ): Config {
 	return definition[TableConfig]
+}
+
+export type EffectTableBaseDoc<Config extends EffectTableConfig> = {
+	[K in keyof Config["properties"]]: Infer<Config["properties"][K]>
 }
 
 export type EffectTableDoc<Config extends EffectTableConfig> = Simplify<
 	{
 		_id: GenericId<Config["name"]>
 		_creationTime: number
-	} & {
-		[K in keyof Config["properties"]]: Infer<Config["properties"][K]>
-	}
+	} & EffectTableBaseDoc<Config>
 >

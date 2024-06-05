@@ -10,7 +10,7 @@ import {
 	type EffectTableDoc,
 } from "./tables"
 
-export function docFrom<Config extends EffectTableConfig>(
+export function getFrom<Config extends EffectTableConfig>(
 	definition: Record<typeof TableConfig, Config>,
 	id: GenericId<Config["name"]>,
 ) {

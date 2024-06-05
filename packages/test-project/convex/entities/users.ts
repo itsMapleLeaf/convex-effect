@@ -1,20 +1,36 @@
-import { effectMutation, effectQuery, queryFrom } from "convex-effect"
+import {
+	effectMutation,
+	effectQuery,
+	getFrom,
+	insertInto,
+	queryFrom,
+} from "convex-effect"
 import { v } from "convex/values"
-import { Console, Effect, pipe } from "effect"
+import { Effect, pipe } from "effect"
 import { users } from "../tables.ts"
 
 export const create = effectMutation({
 	args: {
 		name: v.string(),
 	},
-	handler(ctx, args) {
+	handler(_, args) {
 		return Effect.gen(function* () {
 			const key = crypto.randomUUID()
-			yield* Effect.promise(() =>
-				ctx.db.insert("users", { name: args.name, key }),
-			)
-			return key
+			const id = yield* insertInto(users, { name: args.name, key })
+			return { id, key }
 		})
+	},
+})
+
+export const get = effectQuery({
+	args: {
+		userId: v.id("users"),
+	},
+	handler(_, args) {
+		return pipe(
+			getFrom(users, args.userId),
+			Effect.catchTag("DocNotFoundError", () => Effect.succeed(null)),
+		)
 	},
 })
 
@@ -25,8 +41,7 @@ export const getByKey = effectQuery({
 	handler(_, args) {
 		return pipe(
 			queryFrom(users).byIndex("key", args.key).first(),
-			Effect.tapError(Console.warn),
-			Effect.orElseSucceed(() => null),
+			Effect.catchTag("DocNotFoundError", () => Effect.succeed(null)),
 		)
 	},
 })

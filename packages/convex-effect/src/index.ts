@@ -1,5 +1,6 @@
 export * from "./functions.ts"
 export * from "./indexes.ts"
+export * from "./mutations.ts"
 export * from "./queries.ts"
 export * from "./services.ts"
 export * from "./tables.ts"
