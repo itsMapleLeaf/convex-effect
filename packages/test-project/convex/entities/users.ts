@@ -1,6 +1,8 @@
+import { queryFrom } from "convex-effect"
 import { v } from "convex/values"
-import { Effect, pipe } from "effect"
-import { db, effectMutation, effectQuery } from "./lib/convex-effect.ts"
+import { Console, Effect, pipe } from "effect"
+import { effectMutation, effectQuery } from "../lib/convex-effect.ts"
+import { users } from "../tables.ts"
 
 export const create = effectMutation({
 	args: {
@@ -22,14 +24,10 @@ export const getByKey = effectQuery({
 		key: v.string(),
 	},
 	handler(_, args) {
-		return getUserByKey(args.key)
+		return pipe(
+			queryFrom(users).byIndex("key", args.key).first(),
+			Effect.tapError(Console.warn),
+			Effect.orElseSucceed(() => null),
+		)
 	},
 })
-
-export function getUserByKey(key: string) {
-	return pipe(
-		db.query("users"),
-		Effect.map((query) => db.indexEquals(query, "key", key)),
-		Effect.flatMap(db.first),
-	)
-}

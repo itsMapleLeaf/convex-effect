@@ -1,5 +1,11 @@
 {
-	"workspaces": [
-		"packages/*"
-	]
+  "devDependencies": {
+    "typescript": "^5.6.0-dev.20240604"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "iterator-helpers-polyfill": "^3.0.1"
+  }
 }
