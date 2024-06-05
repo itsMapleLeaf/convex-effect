@@ -1,14 +1,22 @@
 import type {
 	ActionBuilder,
+	DocumentByInfo,
 	GenericActionCtx,
 	GenericDataModel,
 	GenericMutationCtx,
 	GenericQueryCtx,
+	GenericTableInfo,
+	IndexNames,
+	IndexRange,
 	MutationBuilder,
+	NamedIndex,
+	OrderedQuery,
 	QueryBuilder,
+	QueryInitializer,
 } from "convex/server"
-import type { ObjectType, PropertyValidators } from "convex/values"
+import type { GenericId, ObjectType, PropertyValidators } from "convex/values"
 import { Effect, pipe } from "effect"
+import { DocNotFoundError } from "./db.ts"
 import {
 	ActionCtxService,
 	MutationCtxService,
@@ -29,9 +37,9 @@ export type FunctionBuilderOptions<
 }
 
 export function configure<DataModel extends GenericDataModel>({
-	query,
-	mutation,
-	action,
+	query: createQuery,
+	mutation: createMutation,
+	action: createAction,
 }: {
 	query: QueryBuilder<DataModel, "public">
 	mutation: MutationBuilder<DataModel, "public">
@@ -58,6 +66,47 @@ export function configure<DataModel extends GenericDataModel>({
 		)
 	}
 
+	const db = {
+		get<TableName extends string>(id: GenericId<TableName>) {
+			return pipe(
+				getQueryCtx(),
+				Effect.flatMap((ctx) => Effect.promise(() => ctx.db.get(id))),
+				Effect.flatMap(Effect.fromNullable),
+				Effect.mapError(() => new DocNotFoundError(undefined, id)),
+			)
+		},
+
+		indexEquals<
+			TableInfo extends GenericTableInfo,
+			IndexName extends IndexNames<TableInfo>,
+		>(
+			query: QueryInitializer<TableInfo>,
+			index: IndexName,
+			...values: IndexValues<TableInfo, IndexName>
+		) {
+			return query.withIndex(
+				index,
+				(q) =>
+					values.reduce((q, value) => q.eq(value), q) as unknown as IndexRange,
+			)
+		},
+
+		query<TableName extends string>(table: TableName) {
+			return pipe(
+				getQueryCtx(),
+				Effect.map((ctx) => ctx.db.query(table)),
+			)
+		},
+
+		first<TableInfo extends GenericTableInfo>(query: OrderedQuery<TableInfo>) {
+			return pipe(
+				Effect.promise(() => query.first()),
+				Effect.flatMap(Effect.fromNullable),
+				Effect.mapError(() => new DocNotFoundError()),
+			)
+		},
+	}
+
 	function effectQuery<Args extends PropertyValidators, Result>(
 		options: FunctionBuilderOptions<
 			GenericQueryCtx<DataModel>,
@@ -66,7 +115,7 @@ export function configure<DataModel extends GenericDataModel>({
 			Result
 		>,
 	) {
-		return query({
+		return createQuery({
 			args: options.args,
 			handler(ctx, args) {
 				return pipe(
@@ -86,7 +135,7 @@ export function configure<DataModel extends GenericDataModel>({
 			Result
 		>,
 	) {
-		return mutation({
+		return createMutation({
 			args: options.args,
 			handler(ctx, args) {
 				return pipe(
@@ -107,7 +156,7 @@ export function configure<DataModel extends GenericDataModel>({
 			Result
 		>,
 	) {
-		return action({
+		return createAction({
 			args: options.args,
 			handler(ctx, args) {
 				return pipe(
@@ -120,6 +169,7 @@ export function configure<DataModel extends GenericDataModel>({
 	}
 
 	return {
+		db,
 		getQueryCtx,
 		getMutationCtx,
 		getActionCtx,
@@ -128,3 +178,24 @@ export function configure<DataModel extends GenericDataModel>({
 		effectAction,
 	}
 }
+
+type IndexValues<
+	TableInfo extends GenericTableInfo,
+	IndexName extends IndexNames<TableInfo>,
+> = _IndexValues<
+	DropLast<NamedIndex<TableInfo, IndexName>>,
+	DocumentByInfo<TableInfo>
+>
+
+type _IndexValues<IndexKeys extends readonly unknown[], DocType> = {
+	[n in keyof IndexKeys]: IndexKeys[n] extends keyof DocType
+		? DocType[IndexKeys[n]]
+		: never
+}
+
+type DropLast<T extends readonly unknown[]> = T extends readonly [
+	...infer U,
+	unknown,
+]
+	? U
+	: never

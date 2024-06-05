@@ -8,4 +8,5 @@ export const {
 	effectQuery,
 	effectMutation,
 	effectAction,
+	db,
 } = configure(generatedServer)

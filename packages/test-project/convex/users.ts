@@ -1,12 +1,6 @@
-import type { QueryCtxService } from "convex-effect"
 import { v } from "convex/values"
 import { Effect, pipe } from "effect"
-import type { Doc } from "./_generated/dataModel"
-import {
-	effectMutation,
-	effectQuery,
-	getQueryCtx,
-} from "./lib/convex-effect.ts"
+import { db, effectMutation, effectQuery } from "./lib/convex-effect.ts"
 
 export const create = effectMutation({
 	args: {
@@ -32,18 +26,10 @@ export const getByKey = effectQuery({
 	},
 })
 
-export function getUserByKey(
-	key: string,
-): Effect.Effect<Doc<"users"> | null, never, QueryCtxService> {
+export function getUserByKey(key: string) {
 	return pipe(
-		getQueryCtx(),
-		Effect.flatMap((ctx) =>
-			Effect.promise(() =>
-				ctx.db
-					.query("users")
-					.withIndex("key", (q) => q.eq("key", key))
-					.unique(),
-			),
-		),
+		db.query("users"),
+		Effect.map((query) => db.indexEquals(query, "key", key)),
+		Effect.flatMap(db.first),
 	)
 }
