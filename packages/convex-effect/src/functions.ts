@@ -25,7 +25,7 @@ export type FunctionBuilderOptions<
 	handler: (
 		ctx: Ctx,
 		args: ObjectType<Args>,
-	) => Effect.Effect<Result, unknown, Service>
+	) => Effect.Effect<Result, never, Service>
 }
 
 export function effectQuery<Args extends PropertyValidators, Result>(
