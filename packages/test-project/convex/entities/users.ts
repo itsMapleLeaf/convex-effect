@@ -1,7 +1,6 @@
-import { queryFrom } from "convex-effect"
+import { effectMutation, effectQuery, queryFrom } from "convex-effect"
 import { v } from "convex/values"
 import { Console, Effect, pipe } from "effect"
-import { effectMutation, effectQuery } from "../lib/convex-effect.ts"
 import { users } from "../tables.ts"
 
 export const create = effectMutation({
