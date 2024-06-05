@@ -8,15 +8,16 @@ export const users = defineTable("users", {
 
 export const rooms = defineTable("rooms", {
 	name: v.string(),
+	visilbility: defineIndex(v.union(v.literal("public"), v.literal("private"))),
 })
 
 export const roomUsers = defineTable("roomUsers", {
-	roomId: v.id("rooms"),
-	userId: v.id("users"),
+	roomId: defineIndex(v.id("rooms")),
+	userId: defineIndex(v.id("users")),
 })
 
 export const messages = defineTable("messages", {
-	roomId: v.id("rooms"),
-	userId: v.id("users"),
+	roomId: defineIndex(v.id("rooms")),
+	userId: defineIndex(v.id("users")),
 	text: v.string(),
 })

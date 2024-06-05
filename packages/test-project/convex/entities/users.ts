@@ -7,7 +7,8 @@ import {
 } from "convex-effect"
 import { v } from "convex/values"
 import { Effect, pipe } from "effect"
-import { users } from "../tables.ts"
+import { Iterator } from "iterator-helpers-polyfill"
+import { roomUsers, users } from "../tables.ts"
 
 export const create = effectMutation({
 	args: {
@@ -43,5 +44,25 @@ export const getByKey = effectQuery({
 			queryFrom(users).byIndex("key", args.key).first(),
 			Effect.catchTag("DocNotFoundError", () => Effect.succeed(null)),
 		)
+	},
+})
+
+export const listByRoom = effectQuery({
+	args: {
+		roomId: v.id("rooms"),
+	},
+	handler(args) {
+		return Effect.gen(function* () {
+			const roomUserDocs = yield* queryFrom(roomUsers)
+				.byIndex("roomId", args.roomId)
+				.collect()
+
+			return yield* Effect.allSuccesses(
+				Iterator.from(roomUserDocs).map((roomUser) =>
+					getFrom(users, roomUser.userId),
+				),
+				{ concurrency: "unbounded" },
+			)
+		})
 	},
 })
