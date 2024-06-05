@@ -13,7 +13,7 @@ export const create = effectMutation({
 	args: {
 		name: v.string(),
 	},
-	handler(_, args) {
+	handler(args) {
 		return Effect.gen(function* () {
 			const key = crypto.randomUUID()
 			const id = yield* insertInto(users, { name: args.name, key })
@@ -26,7 +26,7 @@ export const get = effectQuery({
 	args: {
 		userId: v.id("users"),
 	},
-	handler(_, args) {
+	handler(args) {
 		return pipe(
 			getFrom(users, args.userId),
 			Effect.catchTag("DocNotFoundError", () => Effect.succeed(null)),
@@ -38,7 +38,7 @@ export const getByKey = effectQuery({
 	args: {
 		key: v.string(),
 	},
-	handler(_, args) {
+	handler(args) {
 		return pipe(
 			queryFrom(users).byIndex("key", args.key).first(),
 			Effect.catchTag("DocNotFoundError", () => Effect.succeed(null)),

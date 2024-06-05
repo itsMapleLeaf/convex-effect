@@ -23,8 +23,8 @@ export type FunctionBuilderOptions<
 > = {
 	args: Args
 	handler: (
-		ctx: Ctx,
 		args: ObjectType<Args>,
+		ctx: Ctx,
 	) => Effect.Effect<Result, never, Service>
 }
 
@@ -40,7 +40,7 @@ export function effectQuery<Args extends PropertyValidators, Result>(
 		args: options.args,
 		handler(ctx, args) {
 			return pipe(
-				options.handler(ctx, args),
+				options.handler(args, ctx),
 				Effect.provideService(QueryCtxService, ctx as any),
 				Effect.runPromise,
 			)
@@ -60,7 +60,7 @@ export function effectMutation<Args extends PropertyValidators, Result>(
 		args: options.args,
 		handler(ctx, args) {
 			return pipe(
-				options.handler(ctx, args),
+				options.handler(args, ctx),
 				Effect.provideService(QueryCtxService, ctx as any),
 				Effect.provideService(MutationCtxService, ctx as any),
 				Effect.runPromise,
@@ -81,7 +81,7 @@ export function effectAction<Args extends PropertyValidators, Result>(
 		args: options.args,
 		handler(ctx, args) {
 			return pipe(
-				options.handler(ctx, args),
+				options.handler(args, ctx),
 				Effect.provideService(ActionCtxService, ctx as any),
 				Effect.runPromise,
 			)
