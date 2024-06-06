@@ -1,8 +1,11 @@
 import type {
+	ExpressionOrValue,
+	FilterBuilder,
 	GenericDocument,
 	GenericTableInfo,
 	OrderedQuery,
-	Query,
+	PaginationOptions,
+	PaginationResult,
 } from "convex/server"
 import type { GenericId } from "convex/values"
 import { Effect, Effectable } from "effect"
@@ -18,25 +21,45 @@ export function fromTable<Config extends EffectTableConfig>(
 	definition: Record<typeof TableConfig, Config>,
 ) {
 	const config = tableConfigFrom(definition)
-	return new PoolQuery(
-		config,
-		QueryCtxService.pipe(Effect.map((ctx) => ctx.db.query(config.name))),
-	)
+	return new PoolQuery(config)
 }
 
-export class OrderedPoolQuery<
+type FilterCallback = (
+	q: FilterBuilder<GenericTableInfo>,
+) => ExpressionOrValue<boolean>
+
+type QueryState = {
+	readonly order: "asc" | "desc" | null
+	readonly filters: readonly FilterCallback[]
+}
+
+export class PoolQuery<
 	Config extends EffectTableConfig,
 	Service = never,
-> extends Effectable.Class<EffectTableDoc<Config>[], never, Service> {
+> extends Effectable.Class<
+	EffectTableDoc<Config>[],
+	never,
+	Service | QueryCtxService
+> {
 	constructor(
-		protected readonly config: Config,
-		protected readonly baseQuery: Effect.Effect<
-			OrderedQuery<GenericTableInfo>,
-			never,
-			Service
-		>,
+		private readonly config: Config,
+		private readonly state: QueryState = {
+			order: null,
+			filters: [],
+		},
 	) {
 		super()
+	}
+
+	order(direction: "asc" | "desc") {
+		return this.withState({ ...this.state, order: direction })
+	}
+
+	filter(filter: FilterCallback) {
+		return this.withState({
+			...this.state,
+			filters: [...this.state.filters, filter],
+		})
 	}
 
 	get(id: GenericId<Config["name"]>) {
@@ -57,48 +80,65 @@ export class OrderedPoolQuery<
 		)
 	}
 
+	unique() {
+		return new ItemQuery(
+			this.config,
+			Effect.flatMap(this.baseQuery, (query) =>
+				Effect.promise(() => query.unique()),
+			),
+		)
+	}
+
 	collect() {
-		return this.finalize((query) => query.collect())
+		return this.finalize(
+			(query) => query.collect() as Promise<EffectTableDoc<Config>[]>,
+		)
 	}
 
 	take(count: number) {
-		return this.finalize((query) => query.take(count))
+		return this.finalize(
+			(query) => query.take(count) as Promise<EffectTableDoc<Config>[]>,
+		)
+	}
+
+	paginate(options: PaginationOptions) {
+		return this.finalize(
+			(query) =>
+				query.paginate(options) as Promise<
+					PaginationResult<EffectTableDoc<Config>>
+				>,
+		)
 	}
 
 	commit() {
 		return this.collect()
 	}
 
-	private finalize(
-		next: (query: OrderedQuery<GenericTableInfo>) => Promise<GenericDocument[]>,
-	) {
-		return Effect.flatMap(this.baseQuery, (query) =>
-			Effect.promise(async () => {
-				const docs = await next(query)
-				return docs as EffectTableDoc<Config>[]
+	private get baseQuery() {
+		return QueryCtxService.pipe(
+			Effect.map((ctx) => {
+				let query
+				query = ctx.db.query(this.config.name)
+				for (const filter of this.state.filters) {
+					query = query.filter(filter)
+				}
+				if (this.state.order) {
+					query = query.order(this.state.order)
+				}
+				return query
 			}),
 		)
 	}
-}
 
-export class PoolQuery<
-	Config extends EffectTableConfig,
-	Service = never,
-> extends OrderedPoolQuery<Config, Service> {
-	readonly baseQuery: Effect.Effect<Query<GenericTableInfo>, never, Service>
-
-	constructor(
-		config: Config,
-		baseQuery: Effect.Effect<Query<GenericTableInfo>, never, Service>,
-	) {
-		super(config, baseQuery)
-		this.baseQuery = baseQuery
+	private withState(state: QueryState) {
+		return new PoolQuery(this.config, state)
 	}
 
-	order(direction: "asc" | "desc") {
-		return new OrderedPoolQuery(
-			this.config,
-			Effect.map(this.baseQuery, (query) => query.order(direction)),
+	private finalize<Result>(
+		next: (query: OrderedQuery<GenericTableInfo>) => Promise<Result>,
+	) {
+		return Effect.flatMap(this.baseQuery, (query) =>
+			Effect.promise(() => next(query)),
 		)
 	}
 }
