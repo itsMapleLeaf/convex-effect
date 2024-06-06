@@ -32,38 +32,10 @@ export function queryFrom<Config extends EffectTableConfig>(
 	return new EffectQueryInitializer(table)
 }
 
-export class EffectQueryInitializer<Config extends EffectTableConfig> {
-	constructor(readonly config: Config) {}
-
-	byIndex<Name extends Extract<keyof Config["indexes"], string>>(
-		index: Name,
-		...values: IndexValues<Config["indexes"][Name]>
-	) {
-		return new EffectQuery(
-			this.config,
-			Effect.gen(this, function* () {
-				const ctx = yield* QueryCtxService
-				const query = ctx.db.query(this.config.name)
-				const indexEntries = this.config.indexes[index]
-				return query.withIndex(
-					index,
-					// @ts-expect-error: this API is impossible to make typesafe with generics
-					(builder) =>
-						indexEntries.reduce(
-							// @ts-expect-error: this API is impossible to make typesafe with generics
-							(builder, entry, i) => builder.eq(entry.key, values[i]),
-							builder,
-						),
-				)
-			}),
-		)
-	}
-}
-
 export class EffectQuery<Config extends EffectTableConfig> {
 	constructor(
-		private readonly config: Config,
-		private readonly query: Effect.Effect<
+		protected readonly config: Config,
+		protected readonly query: Effect.Effect<
 			Query<GenericTableInfo>,
 			never,
 			QueryCtxService
@@ -87,6 +59,41 @@ export class EffectQuery<Config extends EffectTableConfig> {
 			const docs = yield* Effect.promise(() => query.collect())
 			return docs as EffectTableDoc<Config>[]
 		})
+	}
+}
+
+export class EffectQueryInitializer<
+	Config extends EffectTableConfig,
+> extends EffectQuery<Config> {
+	constructor(config: Config) {
+		super(
+			config,
+			QueryCtxService.pipe(Effect.map((ctx) => ctx.db.query(config.name))),
+		)
+	}
+
+	byIndex<Name extends Extract<keyof Config["indexes"], string>>(
+		index: Name,
+		...values: IndexValues<Config["indexes"][Name]>
+	) {
+		return new EffectQuery(
+			this.config,
+			Effect.gen(this, function* () {
+				const ctx = yield* QueryCtxService
+				const query = ctx.db.query(this.config.name)
+				const indexEntries = this.config.indexes[index]
+				return query.withIndex(
+					index,
+					// @ts-expect-error: this API is impossible to make typesafe with generics
+					(builder) =>
+						indexEntries.reduce(
+							// @ts-expect-error: this API is impossible to make typesafe with generics
+							(builder, entry, i) => builder.eq(entry.key, values[i]),
+							builder,
+						),
+				)
+			}),
+		)
 	}
 }
 

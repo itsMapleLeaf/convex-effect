@@ -15,7 +15,8 @@ export function insertInto<Config extends EffectTableConfig>(
 	const table = tableConfigFrom(definition)
 	return Effect.gen(function* () {
 		const ctx = yield* MutationCtxService
-		return yield* Effect.promise(() => ctx.db.insert(table.name, data))
+		const id = yield* Effect.promise(() => ctx.db.insert(table.name, data))
+		return id as GenericId<Config["name"]>
 	})
 }
 
@@ -30,7 +31,7 @@ export function patchIn<Config extends EffectTableConfig>(
 	})
 }
 
-export function deleteDoc<Config extends EffectTableConfig>(
+export function deleteFrom<Config extends EffectTableConfig>(
 	_definition: TableDefinitionWithConfig<Config>,
 	id: GenericId<Config["name"]>,
 ) {

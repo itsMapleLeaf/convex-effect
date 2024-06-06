@@ -1,14 +1,18 @@
 import chalk from "chalk"
 import extract from "extract-zip"
-import { exists } from "node:fs/promises"
+import { existsSync, mkdirSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { oraPromise } from "ora"
 
+export const backendUrl = "http://127.0.0.1:3210"
+
 const projectRoot = new URL("../", import.meta.url)
 const backendFolder = new URL("convex-backend/", projectRoot)
 const backendBin = new URL("convex-local-backend", backendFolder)
+const backendDataFolder = new URL("data/", backendFolder)
+
 const releaseTag = `precompiled-2024-05-29-e147dad`
 
 function fromProjectRoot(fullPath: string | URL) {
@@ -66,20 +70,33 @@ function resolveBinaryPath() {
 	return binaryPath
 }
 
-async function main() {
+async function isReachable(input: string | URL | Request) {
+	try {
+		await fetch(input)
+		return true
+	} catch {
+		return false
+	}
+}
+
+export async function startBackend() {
 	const binaryPath = resolveBinaryPath()
-	if (!(await exists(binaryPath))) {
+
+	if (!existsSync(binaryPath)) {
 		await downloadConvexBackend()
 	}
 
-	Bun.spawn({
-		cmd: [binaryPath],
-		cwd: fileURLToPath(backendFolder),
-		stdio: ["inherit", "inherit", "inherit"],
-	})
-}
+	rmSync(backendDataFolder, { recursive: true, force: true })
+	mkdirSync(backendDataFolder, { recursive: true })
 
-main().catch((error) => {
-	console.error(error)
-	process.exit(1)
-})
+	const process = Bun.spawn({
+		cmd: [binaryPath],
+		cwd: fileURLToPath(backendDataFolder),
+	})
+
+	while (!(await isReachable(backendUrl))) {
+		await Bun.sleep(100)
+	}
+
+	return process
+}

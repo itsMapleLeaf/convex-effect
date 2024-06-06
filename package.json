@@ -5,24 +5,23 @@
 		".": "./src/index.ts"
 	},
 	"scripts": {
-		"convex-backend": "bun scripts/convex-backend.ts",
-		"convex-local": "bun scripts/convex-local.ts"
+		"test": "bun scripts/test.ts"
+	},
+	"peerDependencies": {
+		"convex": "*",
+		"effect": "*"
 	},
 	"dependencies": {
-		"iterator-helpers-polyfill": "^3.0.1",
-		"effect": "3.2.8"
+		"iterator-helpers-polyfill": "^3.0.1"
 	},
 	"devDependencies": {
 		"@types/bun": "1.1.3",
 		"@types/node": "^20.14.2",
 		"chalk": "5.3.0",
 		"convex": "^1.12.1",
+		"effect": "3.2.8",
 		"extract-zip": "2.0.1",
 		"ora": "^8.0.1",
 		"typescript": "^5.6.0-dev.20240604"
-	},
-	"peerDependencies": {
-		"convex": "*",
-		"effect": "*"
 	}
 }

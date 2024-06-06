@@ -22,3 +22,10 @@ export function filterEntries(
 		),
 	)
 }
+
+export function asyncMap<In, Out>(
+	inputs: Iterable<In>,
+	fn: (value: In) => Out,
+) {
+	return Promise.all(Iterator.from(inputs).map(fn))
+}
