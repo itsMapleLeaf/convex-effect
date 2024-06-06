@@ -1,8 +1,12 @@
+import {
+	deleteFrom,
+	effectMutation,
+	effectQuery,
+	fromTable,
+	insertInto,
+	patchIn,
+} from "convex-effect"
 import { v } from "convex/values"
-import { Effect } from "effect"
-import { effectMutation, effectQuery } from "../../../src/functions.ts"
-import { deleteFrom, insertInto, patchIn } from "../../../src/mutations.ts"
-import { getFrom, queryFrom } from "../../../src/queries.ts"
 import { todos } from "./tables.ts"
 
 export const create = effectMutation({
@@ -14,20 +18,21 @@ export const create = effectMutation({
 	},
 })
 
+export const list = effectQuery({
+	args: {},
+	handler: () => fromTable(todos),
+})
+
 export const get = effectQuery({
 	args: {
 		id: v.id("todos"),
 	},
-	handler(args) {
-		return getFrom(todos, args.id).pipe(Effect.orElseSucceed(() => null))
-	},
+	handler: (args) => fromTable(todos).get(args.id).orNull(),
 })
 
-export const list = effectQuery({
+export const getFirst = effectQuery({
 	args: {},
-	handler() {
-		return queryFrom(todos).collect()
-	},
+	handler: () => fromTable(todos).first().orNull(),
 })
 
 export const update = effectMutation({

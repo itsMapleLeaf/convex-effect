@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConvexClient } from "convex/browser"
-import { api } from "../fixtures/basic/convex/_generated/api"
+import { api } from "../fixtures/basic/convex/_generated/api.js"
 import { asyncMap } from "../src/helpers.ts"
 
 test("crud", async () => {
@@ -20,6 +20,10 @@ test("crud", async () => {
 		items.map((item) => expect.objectContaining(item)),
 	)
 
+	expect(await client.query(api.todos.getFirst, {})).toEqual(
+		expect.objectContaining(items[0]),
+	)
+
 	for (const item of items) {
 		expect(await client.query(api.todos.get, { id: item._id })).toEqual(
 			expect.objectContaining(item),
@@ -33,4 +37,8 @@ test("crud", async () => {
 		expect.objectContaining({ ...items[0], completed: true }),
 		expect.objectContaining(items[2]),
 	])
+
+	expect(await client.query(api.todos.getFirst, {})).toEqual(
+		expect.objectContaining({ ...items[0], completed: true }),
+	)
 })

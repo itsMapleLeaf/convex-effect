@@ -1,7 +1,6 @@
-import type { GenericTableInfo, Query } from "convex/server"
+import type { GenericDocument, GenericTableInfo, Query } from "convex/server"
 import type { GenericId } from "convex/values"
-import { Effect } from "effect"
-import type { IndexValues } from "./indexes.ts"
+import { Effect, Effectable, pipe } from "effect"
 import { QueryCtxService } from "./services.ts"
 import {
 	TableConfig,
@@ -10,99 +9,118 @@ import {
 	type EffectTableDoc,
 } from "./tables"
 
-export function getFrom<Config extends EffectTableConfig>(
+export function fromTable<Config extends EffectTableConfig>(
 	definition: Record<typeof TableConfig, Config>,
-	id: GenericId<Config["name"]>,
 ) {
 	const config = tableConfigFrom(definition)
-	return Effect.gen(function* () {
-		const ctx = yield* QueryCtxService
-		const doc = yield* Effect.promise(() => ctx.db.get(id))
-		if (!doc) {
-			return yield* Effect.fail(new DocNotFoundError(config.name, id))
-		}
-		return doc as EffectTableDoc<Config>
-	})
+	return new PoolQuery(
+		config,
+		QueryCtxService.pipe(Effect.map((ctx) => ctx.db.query(config.name))),
+	)
 }
 
-export function queryFrom<Config extends EffectTableConfig>(
-	definition: Record<typeof TableConfig, Config>,
-) {
-	const table = tableConfigFrom(definition)
-	return new EffectQueryInitializer(table)
-}
-
-export class EffectQuery<Config extends EffectTableConfig> {
+export class PoolQuery<
+	Config extends EffectTableConfig,
+	Error = never,
+	Service = never,
+> extends Effectable.Class<EffectTableDoc<Config>[], Error, Service> {
 	constructor(
-		protected readonly config: Config,
-		protected readonly query: Effect.Effect<
+		private readonly config: Config,
+		private readonly baseQuery: Effect.Effect<
 			Query<GenericTableInfo>,
 			never,
-			QueryCtxService
+			Service
 		>,
-	) {}
+	) {
+		super()
+	}
 
-	first() {
-		return Effect.gen(this, function* () {
-			const query = yield* this.query
-			const doc = yield* Effect.promise(() => query.first())
-			if (!doc) {
-				return yield* Effect.fail(new DocNotFoundError(this.config.name))
-			}
-			return doc as EffectTableDoc<Config>
-		})
+	commit() {
+		return this.collect()
 	}
 
 	collect() {
 		return Effect.gen(this, function* () {
-			const query = yield* this.query
+			const query = yield* this.baseQuery
 			const docs = yield* Effect.promise(() => query.collect())
 			return docs as EffectTableDoc<Config>[]
 		})
 	}
-}
 
-export class EffectQueryInitializer<
-	Config extends EffectTableConfig,
-> extends EffectQuery<Config> {
-	constructor(config: Config) {
-		super(
-			config,
-			QueryCtxService.pipe(Effect.map((ctx) => ctx.db.query(config.name))),
-		)
+	take(count: number) {
+		return Effect.gen(this, function* () {
+			const query = yield* this.baseQuery
+			const docs = yield* Effect.promise(() => query.take(count))
+			return docs as EffectTableDoc<Config>[]
+		})
 	}
 
-	byIndex<Name extends Extract<keyof Config["indexes"], string>>(
-		index: Name,
-		...values: IndexValues<Config["indexes"][Name]>
-	) {
-		return new EffectQuery(
+	first() {
+		return new ItemQuery(
 			this.config,
 			Effect.gen(this, function* () {
-				const ctx = yield* QueryCtxService
-				const query = ctx.db.query(this.config.name)
-				const indexEntries = this.config.indexes[index]
-				return query.withIndex(
-					index,
-					// @ts-expect-error: this API is impossible to make typesafe with generics
-					(builder) =>
-						indexEntries.reduce(
-							// @ts-expect-error: this API is impossible to make typesafe with generics
-							(builder, entry, i) => builder.eq(entry.key, values[i]),
-							builder,
-						),
-				)
+				const query = yield* this.baseQuery
+				const doc = yield* Effect.promise(() => query.first())
+				if (!doc) {
+					return yield* Effect.fail(new DocNotFoundError(this.config.name))
+				}
+				return doc as EffectTableDoc<Config>
 			}),
 		)
 	}
+
+	get(id: GenericId<Config["name"]>) {
+		return new ItemQuery(
+			this.config,
+			QueryCtxService.pipe(
+				Effect.flatMap((ctx) => Effect.promise(() => ctx.db.get(id))),
+			),
+		)
+	}
 }
 
-export class DocNotFoundError<Table extends string> extends Error {
+export class ItemQuery<
+	Config extends EffectTableConfig,
+	Error,
+	Service,
+> extends Effectable.Class<
+	EffectTableDoc<Config>,
+	Error | DocNotFoundError,
+	Service
+> {
+	constructor(
+		private readonly config: Config,
+		private readonly doc: Effect.Effect<GenericDocument | null, Error, Service>,
+	) {
+		super()
+	}
+
+	commit() {
+		return pipe(
+			this.doc,
+			Effect.flatMap((doc) =>
+				doc
+					? Effect.succeed(doc as EffectTableDoc<Config>)
+					: Effect.fail(new DocNotFoundError(this.config.name)),
+			),
+		)
+	}
+
+	orNull() {
+		return Effect.catchTag(this, "DocNotFoundError", () => Effect.succeed(null))
+	}
+
+	orDie() {
+		return Effect.catchTag(this, "DocNotFoundError", Effect.die)
+	}
+}
+
+export class DocNotFoundError extends Error {
 	readonly _tag = "DocNotFoundError"
 
 	constructor(
-		readonly table?: Table,
-		readonly id?: GenericId<Table>,
+		readonly table?: string,
+		readonly id?: string,
 	) {
 		super(
 			table && id
