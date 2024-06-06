@@ -11,10 +11,10 @@ import type { GenericId } from "convex/values"
 import { Effect, Effectable } from "effect"
 import { QueryCtxService } from "./services.ts"
 import {
-	TableConfig,
-	tableConfigFrom,
 	type EffectTableConfig,
 	type EffectTableDoc,
+	TableConfig,
+	tableConfigFrom,
 } from "./tables"
 
 export function fromTable<Config extends EffectTableConfig>(
