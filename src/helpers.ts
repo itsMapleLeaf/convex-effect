@@ -1,10 +1,6 @@
 import { Iterator } from "iterator-helpers-polyfill"
 
-export function filterEntries<
-	Key extends PropertyKey,
-	Value,
-	OutValue extends Value,
->(
+export function filterEntries<Key extends PropertyKey, Value, OutValue extends Value>(
 	obj: Record<Key, Value>,
 	predicate: (value: Value, key: Key) => value is OutValue,
 ): Record<Key, OutValue>
@@ -17,15 +13,10 @@ export function filterEntries(
 	predicate: (value: PropertyKey, key: unknown) => boolean,
 ) {
 	return Object.fromEntries(
-		Iterator.from(Object.entries(obj)).filter(([key, value]) =>
-			predicate(value, key),
-		),
+		Iterator.from(Object.entries(obj)).filter(([key, value]) => predicate(value, key)),
 	)
 }
 
-export function asyncMap<In, Out>(
-	inputs: Iterable<In>,
-	fn: (value: In) => Out,
-) {
+export function asyncMap<In, Out>(inputs: Iterable<In>, fn: (value: In) => Out) {
 	return Promise.all(Iterator.from(inputs).map(fn))
 }

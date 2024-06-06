@@ -13,7 +13,7 @@ import { QueryCtxService } from "./services.ts"
 import {
 	type EffectTableConfig,
 	type EffectTableDoc,
-	TableConfig,
+	type TableConfig,
 	tableConfigFrom,
 } from "./tables"
 
@@ -24,19 +24,14 @@ export function fromTable<Config extends EffectTableConfig>(
 	return new PoolQuery(config)
 }
 
-type FilterCallback = (
-	q: FilterBuilder<GenericTableInfo>,
-) => ExpressionOrValue<boolean>
+type FilterCallback = (q: FilterBuilder<GenericTableInfo>) => ExpressionOrValue<boolean>
 
 type QueryState = {
 	readonly order: "asc" | "desc" | null
 	readonly filters: readonly FilterCallback[]
 }
 
-export class PoolQuery<
-	Config extends EffectTableConfig,
-	Service = never,
-> extends Effectable.Class<
+export class PoolQuery<Config extends EffectTableConfig, Service = never> extends Effectable.Class<
 	EffectTableDoc<Config>[],
 	never,
 	Service | QueryCtxService
@@ -65,48 +60,35 @@ export class PoolQuery<
 	get(id: GenericId<Config["name"]>) {
 		return new ItemQuery(
 			this.config,
-			Effect.flatMap(QueryCtxService, (ctx) =>
-				Effect.promise(() => ctx.db.get(id)),
-			),
+			Effect.flatMap(QueryCtxService, (ctx) => Effect.promise(() => ctx.db.get(id))),
 		)
 	}
 
 	first() {
 		return new ItemQuery(
 			this.config,
-			Effect.flatMap(this.baseQuery, (query) =>
-				Effect.promise(() => query.first()),
-			),
+			Effect.flatMap(this.baseQuery, (query) => Effect.promise(() => query.first())),
 		)
 	}
 
 	unique() {
 		return new ItemQuery(
 			this.config,
-			Effect.flatMap(this.baseQuery, (query) =>
-				Effect.promise(() => query.unique()),
-			),
+			Effect.flatMap(this.baseQuery, (query) => Effect.promise(() => query.unique())),
 		)
 	}
 
 	collect() {
-		return this.finalize(
-			(query) => query.collect() as Promise<EffectTableDoc<Config>[]>,
-		)
+		return this.finalize((query) => query.collect() as Promise<EffectTableDoc<Config>[]>)
 	}
 
 	take(count: number) {
-		return this.finalize(
-			(query) => query.take(count) as Promise<EffectTableDoc<Config>[]>,
-		)
+		return this.finalize((query) => query.take(count) as Promise<EffectTableDoc<Config>[]>)
 	}
 
 	paginate(options: PaginationOptions) {
 		return this.finalize(
-			(query) =>
-				query.paginate(options) as Promise<
-					PaginationResult<EffectTableDoc<Config>>
-				>,
+			(query) => query.paginate(options) as Promise<PaginationResult<EffectTableDoc<Config>>>,
 		)
 	}
 
@@ -134,20 +116,12 @@ export class PoolQuery<
 		return new PoolQuery(this.config, state)
 	}
 
-	private finalize<Result>(
-		next: (query: OrderedQuery<GenericTableInfo>) => Promise<Result>,
-	) {
-		return Effect.flatMap(this.baseQuery, (query) =>
-			Effect.promise(() => next(query)),
-		)
+	private finalize<Result>(next: (query: OrderedQuery<GenericTableInfo>) => Promise<Result>) {
+		return Effect.flatMap(this.baseQuery, (query) => Effect.promise(() => next(query)))
 	}
 }
 
-export class ItemQuery<
-	Config extends EffectTableConfig,
-	Error,
-	Service,
-> extends Effectable.Class<
+export class ItemQuery<Config extends EffectTableConfig, Error, Service> extends Effectable.Class<
 	EffectTableDoc<Config>,
 	Error | DocNotFoundError,
 	Service

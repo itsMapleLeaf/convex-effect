@@ -20,9 +20,7 @@ test("crud", async () => {
 		items.map((item) => expect.objectContaining(item)),
 	)
 
-	expect(await client.query(api.todos.getFirst, {})).toEqual(
-		expect.objectContaining(items[0]),
-	)
+	expect(await client.query(api.todos.getFirst, {})).toEqual(expect.objectContaining(items[0]))
 
 	for (const item of items) {
 		expect(await client.query(api.todos.get, { id: item._id })).toEqual(
@@ -41,7 +39,5 @@ test("crud", async () => {
 	expect(await client.query(api.todos.getFirst, {})).toEqual(
 		expect.objectContaining({ ...items[0], completed: true }),
 	)
-	expect(await client.query(api.todos.getLatest, {})).toEqual(
-		expect.objectContaining(items[2]),
-	)
+	expect(await client.query(api.todos.getLatest, {})).toEqual(expect.objectContaining(items[2]))
 })

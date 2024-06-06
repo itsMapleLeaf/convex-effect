@@ -1,10 +1,6 @@
 import { defineTable as defineConvexTable } from "convex/server"
-import {
-	type GenericId,
-	type Infer,
-	type PropertyValidators,
-} from "convex/values"
-import { pickIndexProperties, type EffectIndexEntry } from "./indexes.ts"
+import type { GenericId, Infer, PropertyValidators } from "convex/values"
+import { type EffectIndexEntry, pickIndexProperties } from "./indexes.ts"
 import type { NonEmptyArray, Simplify } from "./types.ts"
 
 export const TableConfig = Symbol("TableConfig")
@@ -35,8 +31,10 @@ export interface EffectTableConfig {
 	indexes: Record<string, Readonly<NonEmptyArray<EffectIndexEntry>>>
 }
 
-export type TableDefinitionWithConfig<Config extends EffectTableConfig> =
-	Record<typeof TableConfig, Config>
+export type TableDefinitionWithConfig<Config extends EffectTableConfig> = Record<
+	typeof TableConfig,
+	Config
+>
 
 export function tableConfigFrom<Config extends EffectTableConfig>(
 	definition: TableDefinitionWithConfig<Config>,

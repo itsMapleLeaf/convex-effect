@@ -8,5 +8,23 @@
 		"rules": {
 			"recommended": true
 		}
-	}
+	},
+	"formatter": {
+		"lineWidth": 100
+	},
+	"javascript": {
+		"formatter": {
+			"semicolons": "asNeeded"
+		}
+	},
+	"overrides": [
+		{
+			"include": ["package.json"],
+			"json": {
+				"formatter": {
+					"indentStyle": "space"
+				}
+			}
+		}
+	]
 }

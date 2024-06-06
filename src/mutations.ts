@@ -2,10 +2,10 @@ import type { GenericId } from "convex/values"
 import { Effect } from "effect"
 import { MutationCtxService } from "./services.ts"
 import {
-	tableConfigFrom,
 	type EffectTableBaseDoc,
 	type EffectTableConfig,
 	type TableDefinitionWithConfig,
+	tableConfigFrom,
 } from "./tables.ts"
 
 export function insertInto<Config extends EffectTableConfig>(

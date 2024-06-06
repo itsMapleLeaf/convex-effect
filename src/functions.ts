@@ -1,40 +1,23 @@
 import {
-	actionGeneric,
-	mutationGeneric,
-	queryGeneric,
 	type GenericActionCtx,
 	type GenericDataModel,
 	type GenericMutationCtx,
 	type GenericQueryCtx,
+	actionGeneric,
+	mutationGeneric,
+	queryGeneric,
 } from "convex/server"
 import type { ObjectType, PropertyValidators } from "convex/values"
 import { Effect, pipe } from "effect"
-import {
-	ActionCtxService,
-	MutationCtxService,
-	QueryCtxService,
-} from "./services.ts"
+import { ActionCtxService, MutationCtxService, QueryCtxService } from "./services.ts"
 
-export type FunctionBuilderOptions<
-	Ctx,
-	Service,
-	Args extends PropertyValidators,
-	Result,
-> = {
+export type FunctionBuilderOptions<Ctx, Service, Args extends PropertyValidators, Result> = {
 	args: Args
-	handler: (
-		args: ObjectType<Args>,
-		ctx: Ctx,
-	) => Effect.Effect<Result, never, Service>
+	handler: (args: ObjectType<Args>, ctx: Ctx) => Effect.Effect<Result, never, Service>
 }
 
 export function effectQuery<Args extends PropertyValidators, Result>(
-	options: FunctionBuilderOptions<
-		GenericQueryCtx<GenericDataModel>,
-		QueryCtxService,
-		Args,
-		Result
-	>,
+	options: FunctionBuilderOptions<GenericQueryCtx<GenericDataModel>, QueryCtxService, Args, Result>,
 ) {
 	return queryGeneric({
 		args: options.args,
