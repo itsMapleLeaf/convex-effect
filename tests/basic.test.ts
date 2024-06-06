@@ -41,4 +41,7 @@ test("crud", async () => {
 	expect(await client.query(api.todos.getFirst, {})).toEqual(
 		expect.objectContaining({ ...items[0], completed: true }),
 	)
+	expect(await client.query(api.todos.getLatest, {})).toEqual(
+		expect.objectContaining(items[2]),
+	)
 })

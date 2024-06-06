@@ -1,4 +1,9 @@
-import type { GenericDocument, GenericTableInfo, Query } from "convex/server"
+import type {
+	GenericDocument,
+	GenericTableInfo,
+	OrderedQuery,
+	Query,
+} from "convex/server"
 import type { GenericId } from "convex/values"
 import { Effect, Effectable } from "effect"
 import { QueryCtxService } from "./services.ts"
@@ -19,15 +24,14 @@ export function fromTable<Config extends EffectTableConfig>(
 	)
 }
 
-export class PoolQuery<
+export class OrderedPoolQuery<
 	Config extends EffectTableConfig,
-	Error = never,
 	Service = never,
-> extends Effectable.Class<EffectTableDoc<Config>[], Error, Service> {
+> extends Effectable.Class<EffectTableDoc<Config>[], never, Service> {
 	constructor(
-		private readonly config: Config,
-		private readonly baseQuery: Effect.Effect<
-			Query<GenericTableInfo>,
+		protected readonly config: Config,
+		protected readonly baseQuery: Effect.Effect<
+			OrderedQuery<GenericTableInfo>,
 			never,
 			Service
 		>,
@@ -66,13 +70,35 @@ export class PoolQuery<
 	}
 
 	private finalize(
-		next: (query: Query<GenericTableInfo>) => Promise<GenericDocument[]>,
+		next: (query: OrderedQuery<GenericTableInfo>) => Promise<GenericDocument[]>,
 	) {
 		return Effect.flatMap(this.baseQuery, (query) =>
 			Effect.promise(async () => {
 				const docs = await next(query)
 				return docs as EffectTableDoc<Config>[]
 			}),
+		)
+	}
+}
+
+export class PoolQuery<
+	Config extends EffectTableConfig,
+	Service = never,
+> extends OrderedPoolQuery<Config, Service> {
+	readonly baseQuery: Effect.Effect<Query<GenericTableInfo>, never, Service>
+
+	constructor(
+		config: Config,
+		baseQuery: Effect.Effect<Query<GenericTableInfo>, never, Service>,
+	) {
+		super(config, baseQuery)
+		this.baseQuery = baseQuery
+	}
+
+	order(direction: "asc" | "desc") {
+		return new OrderedPoolQuery(
+			this.config,
+			Effect.map(this.baseQuery, (query) => query.order(direction)),
 		)
 	}
 }

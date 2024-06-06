@@ -35,6 +35,11 @@ export const getFirst = effectQuery({
 	handler: () => fromTable(todos).first().orNull(),
 })
 
+export const getLatest = effectQuery({
+	args: {},
+	handler: () => fromTable(todos).order("desc").first().orNull(),
+})
+
 export const update = effectMutation({
 	args: {
 		id: v.id("todos"),
