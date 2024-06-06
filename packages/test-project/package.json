@@ -5,7 +5,7 @@
 		"dev": "convex dev"
 	},
 	"dependencies": {
-		"convex-effect": "*",
+		"convex-effect": "workspace:^",
 		"convex": "^1.12.1",
 		"effect": "3.2.8"
 	},
