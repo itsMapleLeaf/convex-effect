@@ -1,7 +1,7 @@
-import { effectQuery, getFrom, queryFrom } from "convex-effect"
 import { v } from "convex/values"
 import { Effect, pipe } from "effect"
 import { Iterator } from "iterator-helpers-polyfill"
+import { effectQuery, getFrom, queryFrom } from "../../../../src/index.ts"
 import { rooms, roomUsers, users } from "../tables.ts"
 
 export const listPublic = effectQuery({

@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "convex": "^1.12.1",
+    "convex-effect": "../..",
+    "effect": "3.2.8"
+  },
+  "devDependencies": {}
+}

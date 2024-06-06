@@ -1,5 +1,5 @@
-import { defineIndex, defineTable } from "convex-effect"
 import { v } from "convex/values"
+import { defineIndex, defineTable } from "../../../src/index.ts"
 
 export const users = defineTable("users", {
 	name: v.string(),
