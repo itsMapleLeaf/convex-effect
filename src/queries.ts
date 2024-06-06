@@ -1,6 +1,6 @@
 import type { GenericDocument, GenericTableInfo, Query } from "convex/server"
 import type { GenericId } from "convex/values"
-import { Effect, Effectable, pipe } from "effect"
+import { Effect, Effectable } from "effect"
 import { QueryCtxService } from "./services.ts"
 import {
 	TableConfig,
@@ -35,46 +35,44 @@ export class PoolQuery<
 		super()
 	}
 
-	commit() {
-		return this.collect()
-	}
-
-	collect() {
-		return Effect.gen(this, function* () {
-			const query = yield* this.baseQuery
-			const docs = yield* Effect.promise(() => query.collect())
-			return docs as EffectTableDoc<Config>[]
-		})
-	}
-
-	take(count: number) {
-		return Effect.gen(this, function* () {
-			const query = yield* this.baseQuery
-			const docs = yield* Effect.promise(() => query.take(count))
-			return docs as EffectTableDoc<Config>[]
-		})
+	get(id: GenericId<Config["name"]>) {
+		return new ItemQuery(
+			this.config,
+			Effect.flatMap(QueryCtxService, (ctx) =>
+				Effect.promise(() => ctx.db.get(id)),
+			),
+		)
 	}
 
 	first() {
 		return new ItemQuery(
 			this.config,
-			Effect.gen(this, function* () {
-				const query = yield* this.baseQuery
-				const doc = yield* Effect.promise(() => query.first())
-				if (!doc) {
-					return yield* Effect.fail(new DocNotFoundError(this.config.name))
-				}
-				return doc as EffectTableDoc<Config>
-			}),
+			Effect.flatMap(this.baseQuery, (query) =>
+				Effect.promise(() => query.first()),
+			),
 		)
 	}
 
-	get(id: GenericId<Config["name"]>) {
-		return new ItemQuery(
-			this.config,
-			QueryCtxService.pipe(
-				Effect.flatMap((ctx) => Effect.promise(() => ctx.db.get(id))),
-			),
+	collect() {
+		return this.finalize((query) => query.collect())
+	}
+
+	take(count: number) {
+		return this.finalize((query) => query.take(count))
+	}
+
+	commit() {
+		return this.collect()
+	}
+
+	private finalize(
+		next: (query: Query<GenericTableInfo>) => Promise<GenericDocument[]>,
+	) {
+		return Effect.flatMap(this.baseQuery, (query) =>
+			Effect.promise(async () => {
+				const docs = await next(query)
+				return docs as EffectTableDoc<Config>[]
+			}),
 		)
 	}
 }
@@ -96,13 +94,10 @@ export class ItemQuery<
 	}
 
 	commit() {
-		return pipe(
+		return Effect.filterOrFail(
 			this.doc,
-			Effect.flatMap((doc) =>
-				doc
-					? Effect.succeed(doc as EffectTableDoc<Config>)
-					: Effect.fail(new DocNotFoundError(this.config.name)),
-			),
+			(doc): doc is EffectTableDoc<Config> => doc !== null,
+			() => new DocNotFoundError(this.config.name),
 		)
 	}
 
