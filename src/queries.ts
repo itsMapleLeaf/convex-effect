@@ -99,6 +99,7 @@ export class PoolQuery<Config extends EffectTableConfig, Service = never> extend
 	private get baseQuery() {
 		return QueryCtxService.pipe(
 			Effect.map((ctx) => {
+				// biome-ignore lint/suspicious/noImplicitAnyLet: shut
 				let query
 				query = ctx.db.query(this.config.name)
 				for (const filter of this.state.filters) {
