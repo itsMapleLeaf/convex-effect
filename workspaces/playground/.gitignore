@@ -1,3 +1,4 @@
 node_modules
 /convex/_generated
+/convex-backend
 .env.local

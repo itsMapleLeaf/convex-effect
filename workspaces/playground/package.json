@@ -1,0 +1,14 @@
+{
+  "name": "playground",
+  "scripts": {
+    "test": "bun ./scripts/test.ts"
+  },
+  "dependencies": {
+    "convex": "1.12.1"
+  },
+  "devDependencies": {
+    "chalk": "",
+    "extract-zip": "",
+    "ora": ""
+  }
+}

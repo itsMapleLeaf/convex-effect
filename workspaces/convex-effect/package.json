@@ -1,0 +1,19 @@
+{
+  "name": "convex-effect",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {},
+  "peerDependencies": {
+    "convex": "*",
+    "effect": "*"
+  },
+  "dependencies": {
+    "iterator-helpers-polyfill": "^3.0.1"
+  },
+  "devDependencies": {
+    "convex": "^1.13.2",
+    "effect": "3.2.8"
+  }
+}
