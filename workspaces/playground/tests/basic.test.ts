@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { ConvexClient } from "convex/browser"
-import { api } from "../fixtures/basic/convex/_generated/api.js"
-import { asyncMap } from "../src/helpers.ts"
+import { asyncMap } from "shared/async.ts"
+import { api } from "../convex/_generated/api.js"
 
 test("crud", async () => {
 	const client = new ConvexClient("http://127.0.0.1:3210")
