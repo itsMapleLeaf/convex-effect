@@ -7,6 +7,7 @@ import type {
 } from "convex/server"
 import { EffectAuth } from "./auth.ts"
 import { EffectDatabaseReader, EffectDatabaseWriter } from "./db.ts"
+import { EffectScheduler } from "./scheduler.ts"
 import { EffectStorageReader, EffectStorageWriter } from "./storage.ts"
 
 export class EffectQueryCtx<DataModel extends GenericDataModel> {
@@ -28,20 +29,24 @@ export class EffectMutationCtx<
 > extends EffectQueryCtx<DataModel> {
 	readonly db: EffectDatabaseWriter<DataModel>
 	readonly storage: EffectStorageWriter
+	readonly scheduler: EffectScheduler
 
 	constructor(ctx: GenericMutationCtx<DataModel>) {
 		super(ctx)
 		this.db = new EffectDatabaseWriter(ctx.db)
 		this.storage = new EffectStorageWriter(ctx.storage)
+		this.scheduler = new EffectScheduler(ctx.scheduler)
 	}
 }
 
 export class EffectActionCtx<DataModel extends GenericDataModel> {
 	readonly auth: EffectAuth
 	readonly storage: EffectStorageWriter
+	readonly scheduler: EffectScheduler
 
 	constructor(ctx: GenericActionCtx<DataModel>) {
 		this.auth = new EffectAuth(ctx.auth)
 		this.storage = new EffectStorageWriter(ctx.storage)
+		this.scheduler = new EffectScheduler(ctx.scheduler)
 	}
 }

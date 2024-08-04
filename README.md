@@ -20,11 +20,11 @@
   - [x] storage
 - mutation context
   - [x] database writer
-  - [ ] scheduler
+  - [x] scheduler
 - action context
   - [x] auth
   - [x] storage
-  - [ ] scheduler
+  - [x] scheduler
   - [ ] vector search
   - [ ] `runQuery`
   - [ ] `runMutation`
