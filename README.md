@@ -13,21 +13,16 @@
   - [x] `action`
   - [x] `internalAction`
   - [x] `httpAction`
-- query context
+- query & mutation context
   - [x] database reader
   - [x] system database reader
   - [ ] auth
   - [ ] storage
   - [ ] `runQuery`
-  - [ ] service
 - mutation context
   - [x] database writer
-  - [ ] auth
-  - [ ] storage
   - [ ] scheduler
-  - [ ] `runQuery`
   - [ ] `runMutation`
-  - [ ] service
 - action context
   - [ ] `runQuery`
   - [ ] `runMutation`
@@ -36,7 +31,7 @@
   - [ ] storage
   - [ ] scheduler
   - [ ] vector search
-  - [ ] service
+- [ ] context services
 
 ## ideas
 
