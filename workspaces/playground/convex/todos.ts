@@ -1,5 +1,4 @@
 import { v } from "convex/values"
-import { Effect } from "effect"
 import { mutation, query } from "../lib/api.ts"
 
 export const get = query({
@@ -7,28 +6,25 @@ export const get = query({
 		id: v.id("todos"),
 	},
 	handler(ctx, args) {
-		return ctx.db.get(args.id).pipe(Effect.orDie)
+		return ctx.db.getOrNull(args.id)
 	},
 })
 
 export const getFirst = query({
-	args: {},
 	handler(ctx) {
-		throw new Error("not implemented")
+		return ctx.db.query("todos").firstOrNull()
 	},
 })
 
 export const getLatest = query({
-	args: {},
 	handler(ctx) {
-		throw new Error("not implemented")
+		return ctx.db.query("todos").order("desc").firstOrNull()
 	},
 })
 
 export const list = query({
-	args: {},
 	handler(ctx) {
-		throw new Error("not implemented")
+		return ctx.db.query("todos").collect()
 	},
 })
 

@@ -35,10 +35,16 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 		id: GenericId<TableName>,
 	): Effect.Effect<DocumentByName<DataModel, TableName>, DocNotFound, never> {
 		return Effect.filterOrFail(
-			Effect.promise(() => this.#db.get(id)),
+			this.getOrNull(id),
 			(doc): doc is DocumentByName<DataModel, TableName> => doc != null,
 			() => new DocNotFound({ id }),
 		)
+	}
+
+	getOrNull<TableName extends TableNamesInDataModel<DataModel>>(
+		id: GenericId<TableName>,
+	): Effect.Effect<DocumentByName<DataModel, TableName> | null, never, never> {
+		return Effect.promise(() => this.#db.get(id))
 	}
 
 	normalizeId<TableName extends TableNamesInDataModel<DataModel>>(
@@ -46,10 +52,17 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 		id: string,
 	): Effect.Effect<GenericId<TableName>, InvalidId, never> {
 		return Effect.filterOrFail(
-			Effect.sync(() => this.#db.normalizeId(table, id)),
+			this.normalizeIdOrNull(table, id),
 			(id): id is GenericId<TableName> => id != null,
 			() => new InvalidId({ table, id }),
 		)
+	}
+
+	normalizeIdOrNull<TableName extends TableNamesInDataModel<DataModel>>(
+		table: TableName,
+		id: string,
+	): Effect.Effect<GenericId<TableName> | null, never, never> {
+		return Effect.sync(() => this.#db.normalizeId(table, id))
 	}
 
 	query<TableName extends TableNamesInDataModel<DataModel>>(table: TableName) {
@@ -99,12 +112,24 @@ export class OrderedEffectQuery<
 		)
 	}
 
+	firstOrNull(): Effect.Effect<DocumentByInfo<TableInfo> | null, never, never> {
+		return Effect.promise(() => this.query.first())
+	}
+
 	unique(): Effect.Effect<DocumentByInfo<TableInfo>, DocNotFound, never> {
 		return Effect.filterOrFail(
-			Effect.promise(() => this.query.unique()),
+			this.uniqueOrNull(),
 			(doc): doc is DocumentByInfo<TableInfo> => doc != null,
 			() => new DocNotFound({ table: this.table }),
 		)
+	}
+
+	uniqueOrNull(): Effect.Effect<
+		DocumentByInfo<TableInfo> | null,
+		never,
+		never
+	> {
+		return Effect.promise(() => this.query.unique())
 	}
 }
 
