@@ -26,7 +26,8 @@ import type {
 	WithoutSystemFields,
 } from "convex/server"
 import type { GenericId } from "convex/values"
-import { Data, Effect } from "effect"
+import { Effect } from "effect"
+import { YieldableError } from "effect/Cause"
 import type { DistributedOmit } from "type-fest"
 
 export type BaseDatabaseReader<DataModel extends GenericDataModel> =
@@ -192,15 +193,20 @@ export class EffectQueryInitializer<
 	}
 }
 
-export class DocNotFound extends Data.Error<{
-	id?: GenericId<string>
-	table?: string
-}> {
+export class DocNotFound extends YieldableError {
 	readonly _tag = "DocNotFound"
+
+	constructor(readonly info: { id?: GenericId<string>; table?: string }) {
+		super()
+	}
 }
 
-export class InvalidId extends Data.Error<{ table: string; id: string }> {
+export class InvalidId extends YieldableError {
 	readonly _tag = "InvalidId"
+
+	constructor(readonly info: { table: string; id: string }) {
+		super()
+	}
 }
 
 export class EffectDatabaseWriter<

@@ -1,5 +1,6 @@
 import type { Auth, UserIdentity } from "convex/server"
-import { Data, Effect } from "effect"
+import { Effect } from "effect"
+import { YieldableError } from "effect/Cause"
 import { isSomething } from "./helpers.ts"
 
 export class EffectAuth {
@@ -22,6 +23,6 @@ export class EffectAuth {
 	}
 }
 
-export class NotLoggedIn extends Data.Error {
+export class NotLoggedIn extends YieldableError {
 	readonly _tag = "NotLoggedIn"
 }

@@ -1,6 +1,7 @@
 import type { StorageReader, StorageWriter } from "convex/server"
 import type { GenericId } from "convex/values"
-import { Data, Effect } from "effect"
+import { Effect } from "effect"
+import { YieldableError } from "effect/Cause"
 import { isSomething } from "./helpers.ts"
 
 export class EffectStorageReader {
@@ -44,8 +45,10 @@ export class EffectStorageWriter extends EffectStorageReader {
 	}
 }
 
-export class FileNotFound extends Data.Error<{
-	storageId: GenericId<"_storage">
-}> {
+export class FileNotFound extends YieldableError {
 	readonly _tag = "FileNotFound"
+
+	constructor(readonly info: { storageId: GenericId<"_storage"> }) {
+		super()
+	}
 }
