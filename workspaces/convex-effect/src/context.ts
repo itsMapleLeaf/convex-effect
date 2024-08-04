@@ -3,14 +3,17 @@ import type {
 	GenericDataModel,
 	GenericMutationCtx,
 	GenericQueryCtx,
+	SystemDataModel,
 } from "convex/server"
 import { EffectDatabaseReader } from "./db.ts"
 
 export class EffectQueryCtx<DataModel extends GenericDataModel> {
 	readonly db: EffectDatabaseReader<DataModel>
+	readonly system: EffectDatabaseReader<SystemDataModel>
 
 	constructor(ctx: GenericQueryCtx<DataModel>) {
 		this.db = new EffectDatabaseReader(ctx.db)
+		this.system = new EffectDatabaseReader(ctx.db.system)
 	}
 }
 

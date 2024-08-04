@@ -23,11 +23,15 @@ import type {
 } from "convex/server"
 import type { GenericId } from "convex/values"
 import { Data, Effect } from "effect"
+import type { DistributedOmit } from "type-fest"
+
+export type BaseDatabaseReader<DataModel extends GenericDataModel> =
+	DistributedOmit<GenericDatabaseReader<DataModel>, "system">
 
 export class EffectDatabaseReader<DataModel extends GenericDataModel> {
-	readonly #db: GenericDatabaseReader<DataModel>
+	readonly #db: BaseDatabaseReader<DataModel>
 
-	constructor(db: GenericDatabaseReader<DataModel>) {
+	constructor(db: Omit<GenericDatabaseReader<DataModel>, "system">) {
 		this.#db = db
 	}
 

@@ -3,8 +3,9 @@
 ## todo
 
 - [x] database reader
-- [ ] system database reader
+- [x] system database reader
 - [ ] database writer
+- [ ] system database writer
 - [ ] storage
 - [ ] auth in context
 - [ ] [Convex Auth](https://labs.convex.dev/auth) wrappers

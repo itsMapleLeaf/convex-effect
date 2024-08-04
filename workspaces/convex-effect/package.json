@@ -10,7 +10,8 @@
     "effect": "*"
   },
   "dependencies": {
-    "iterator-helpers-polyfill": "^3.0.1"
+    "iterator-helpers-polyfill": "^3.0.1",
+    "type-fest": "^4.23.0"
   },
   "devDependencies": {
     "convex": "^1.13.2",
