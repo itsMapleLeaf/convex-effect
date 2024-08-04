@@ -1,9 +1,4 @@
-import type {
-	FileMetadata,
-	StorageId,
-	StorageReader,
-	StorageWriter,
-} from "convex/server"
+import type { StorageReader, StorageWriter } from "convex/server"
 import type { GenericId } from "convex/values"
 import { Data, Effect } from "effect"
 import { isSomething } from "./helpers.ts"
