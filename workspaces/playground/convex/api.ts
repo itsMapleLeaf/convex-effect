@@ -1,5 +1,5 @@
 import { createServerApi } from "convex-effect"
-import type { DataModel } from "../convex/_generated/dataModel"
+import type { DataModel } from "./_generated/dataModel"
 
 export const {
 	query,
