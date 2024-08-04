@@ -5,6 +5,7 @@ import type {
 	FilterBuilder,
 	GenericDataModel,
 	GenericDatabaseReader,
+	GenericDatabaseWriter,
 	GenericTableInfo,
 	IndexNames,
 	IndexRange,
@@ -20,6 +21,8 @@ import type {
 	SearchFilterBuilder,
 	SearchIndexNames,
 	TableNamesInDataModel,
+	WithOptionalSystemFields,
+	WithoutSystemFields,
 } from "convex/server"
 import type { GenericId } from "convex/values"
 import { Data, Effect } from "effect"
@@ -29,10 +32,10 @@ export type BaseDatabaseReader<DataModel extends GenericDataModel> =
 	DistributedOmit<GenericDatabaseReader<DataModel>, "system">
 
 export class EffectDatabaseReader<DataModel extends GenericDataModel> {
-	readonly #db: BaseDatabaseReader<DataModel>
+	protected readonly db: BaseDatabaseReader<DataModel>
 
 	constructor(db: Omit<GenericDatabaseReader<DataModel>, "system">) {
-		this.#db = db
+		this.db = db
 	}
 
 	get<TableName extends TableNamesInDataModel<DataModel>>(
@@ -48,7 +51,7 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 	getOrNull<TableName extends TableNamesInDataModel<DataModel>>(
 		id: GenericId<TableName>,
 	): Effect.Effect<DocumentByName<DataModel, TableName> | null, never, never> {
-		return Effect.promise(() => this.#db.get(id))
+		return Effect.promise(() => this.db.get(id))
 	}
 
 	normalizeId<TableName extends TableNamesInDataModel<DataModel>>(
@@ -66,11 +69,11 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 		table: TableName,
 		id: string,
 	): Effect.Effect<GenericId<TableName> | null, never, never> {
-		return Effect.sync(() => this.#db.normalizeId(table, id))
+		return Effect.sync(() => this.db.normalizeId(table, id))
 	}
 
 	query<TableName extends TableNamesInDataModel<DataModel>>(table: TableName) {
-		return new EffectQueryInitializer(this.#db.query(table), table)
+		return new EffectQueryInitializer(this.db.query(table), table)
 	}
 }
 
@@ -193,3 +196,41 @@ export class InvalidId extends Data.TaggedError("InvalidId")<{
 	table: string
 	id: string
 }> {}
+
+export class EffectDatabaseWriter<
+	DataModel extends GenericDataModel,
+> extends EffectDatabaseReader<DataModel> {
+	protected readonly db: GenericDatabaseWriter<DataModel>
+
+	constructor(db: GenericDatabaseWriter<DataModel>) {
+		super(db)
+		this.db = db
+	}
+
+	insert<TableName extends TableNamesInDataModel<DataModel>>(
+		table: TableName,
+		value: WithoutSystemFields<DocumentByName<DataModel, TableName>>,
+	): Effect.Effect<GenericId<TableName>, never, never> {
+		return Effect.promise(() => this.db.insert(table, value))
+	}
+
+	patch<TableName extends TableNamesInDataModel<DataModel>>(
+		id: GenericId<TableName>,
+		value: Partial<DocumentByName<DataModel, TableName>>,
+	): Effect.Effect<void, never, never> {
+		return Effect.promise(() => this.db.patch(id, value))
+	}
+
+	replace<TableName extends TableNamesInDataModel<DataModel>>(
+		id: GenericId<TableName>,
+		value: WithOptionalSystemFields<DocumentByName<DataModel, TableName>>,
+	): Effect.Effect<void, never, never> {
+		return Effect.promise(() => this.db.replace(id, value))
+	}
+
+	delete(
+		id: GenericId<TableNamesInDataModel<DataModel>>,
+	): Effect.Effect<void, never, never> {
+		return Effect.promise(() => this.db.delete(id))
+	}
+}

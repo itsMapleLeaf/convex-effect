@@ -4,8 +4,7 @@
 
 - [x] database reader
 - [x] system database reader
-- [ ] database writer
-- [ ] system database writer
+- [x] database writer
 - [ ] storage
 - [ ] auth in context
 - [ ] [Convex Auth](https://labs.convex.dev/auth) wrappers

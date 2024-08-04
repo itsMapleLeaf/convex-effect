@@ -33,7 +33,7 @@ export const create = mutation({
 		text: v.string(),
 	},
 	handler(ctx, args) {
-		throw new Error("not implemented")
+		return ctx.db.insert("todos", { ...args, completed: false })
 	},
 })
 
@@ -43,7 +43,7 @@ export const update = mutation({
 		completed: v.boolean(),
 	},
 	handler(ctx, args) {
-		throw new Error("not implemented")
+		return ctx.db.patch(args.id, { completed: args.completed })
 	},
 })
 
@@ -52,6 +52,6 @@ export const remove = mutation({
 		id: v.id("todos"),
 	},
 	handler(ctx, args) {
-		throw new Error("not implemented")
+		return ctx.db.delete(args.id)
 	},
 })
