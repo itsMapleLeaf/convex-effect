@@ -73,4 +73,4 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Ship it 🚢
-        run: npx jsr publish
+        run: bunx jsr publish
