@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test"
 import { ConvexClient } from "convex/browser"
 import { asyncMap } from "shared/async.ts"
-import { api } from "../convex/_generated/api.js"
+import { startBackend } from "../lib/convex-backend.js"
+import { api } from "./_generated/api.js"
 
 test("crud", async () => {
-	const client = new ConvexClient("http://127.0.0.1:3210")
+	await using backend = await startBackend()
+	const client = new ConvexClient(backend.url)
 
 	expect(await client.query(api.todos.list, {})).toEqual([])
 
@@ -20,7 +22,9 @@ test("crud", async () => {
 		items.map((item) => expect.objectContaining(item)),
 	)
 
-	expect(await client.query(api.todos.getFirst, {})).toEqual(expect.objectContaining(items[0]))
+	expect(await client.query(api.todos.getFirst, {})).toEqual(
+		expect.objectContaining(items[0]),
+	)
 
 	for (const item of items) {
 		expect(await client.query(api.todos.get, { id: item._id })).toEqual(
@@ -39,5 +43,7 @@ test("crud", async () => {
 	expect(await client.query(api.todos.getFirst, {})).toEqual(
 		expect.objectContaining({ ...items[0], completed: true }),
 	)
-	expect(await client.query(api.todos.getLatest, {})).toEqual(expect.objectContaining(items[2]))
+	expect(await client.query(api.todos.getLatest, {})).toEqual(
+		expect.objectContaining(items[2]),
+	)
 })

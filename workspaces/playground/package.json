@@ -1,10 +1,14 @@
 {
   "name": "playground",
   "scripts": {
-    "test": "bun ./scripts/test.ts"
+    "dev": "convex dev --tail-logs",
+    "build": "convex codegen",
+    "test": "bun test"
   },
   "dependencies": {
     "convex": "^1.13.2",
+    "convex-effect": "workspace:*",
+    "effect": "^3.6.0",
     "shared": "workspace:*"
   },
   "devDependencies": {

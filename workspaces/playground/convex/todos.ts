@@ -1,60 +1,61 @@
-import {
-	deleteFrom,
-	effectMutation,
-	effectQuery,
-	fromTable,
-	insertInto,
-	patchIn,
-} from "convex-effect"
 import { v } from "convex/values"
-import { todos } from "./tables.ts"
+import { Effect } from "effect"
+import { mutation, query } from "../lib/api.ts"
 
-export const create = effectMutation({
-	args: {
-		text: v.string(),
-	},
-	handler(args) {
-		return insertInto(todos, { text: args.text, completed: false })
-	},
-})
-
-export const list = effectQuery({
-	args: {},
-	handler: () => fromTable(todos),
-})
-
-export const get = effectQuery({
+export const get = query({
 	args: {
 		id: v.id("todos"),
 	},
-	handler: (args) => fromTable(todos).get(args.id).orNull(),
+	handler(ctx, args) {
+		return ctx.db.get(args.id).pipe(Effect.orDie)
+	},
 })
 
-export const getFirst = effectQuery({
+export const getFirst = query({
 	args: {},
-	handler: () => fromTable(todos).first().orNull(),
+	handler(ctx) {
+		throw new Error("not implemented")
+	},
 })
 
-export const getLatest = effectQuery({
+export const getLatest = query({
 	args: {},
-	handler: () => fromTable(todos).order("desc").first().orNull(),
+	handler(ctx) {
+		throw new Error("not implemented")
+	},
 })
 
-export const update = effectMutation({
+export const list = query({
+	args: {},
+	handler(ctx) {
+		throw new Error("not implemented")
+	},
+})
+
+export const create = mutation({
+	args: {
+		text: v.string(),
+	},
+	handler(ctx, args) {
+		throw new Error("not implemented")
+	},
+})
+
+export const update = mutation({
 	args: {
 		id: v.id("todos"),
 		completed: v.boolean(),
 	},
-	handler(args) {
-		return patchIn(todos, args.id, { completed: args.completed })
+	handler(ctx, args) {
+		throw new Error("not implemented")
 	},
 })
 
-export const remove = effectMutation({
+export const remove = mutation({
 	args: {
 		id: v.id("todos"),
 	},
-	handler(args) {
-		return deleteFrom(todos, args.id)
+	handler(ctx, args) {
+		throw new Error("not implemented")
 	},
 })

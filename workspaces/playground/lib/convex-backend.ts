@@ -1,9 +1,9 @@
+import chalk from "chalk"
+import extract from "extract-zip"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import chalk from "chalk"
-import extract from "extract-zip"
 import { oraPromise } from "ora"
 
 export const backendUrl = "http://127.0.0.1:3210"
@@ -16,10 +16,9 @@ const backendDataFolder = new URL("data/", backendFolder)
 const releaseTag = "precompiled-2024-05-29-e147dad"
 
 function fromProjectRoot(fullPath: string | URL) {
-	if (typeof fullPath !== "string") {
-		fullPath = fileURLToPath(fullPath)
-	}
-	return path.relative(fileURLToPath(projectRoot), fullPath)
+	const normalizedPath =
+		typeof fullPath !== "string" ? fileURLToPath(fullPath) : fullPath
+	return path.relative(fileURLToPath(projectRoot), normalizedPath)
 }
 
 function getConvexBackendReleaseUrl() {
@@ -42,7 +41,10 @@ async function downloadConvexBackend() {
 	console.info("ℹ️ Convex backend not found! Downloading.")
 	console.info()
 	console.info(chalk.dim("Release url:"), chalk.bold(url))
-	console.info(chalk.dim("Download destination:"), chalk.bold(fromProjectRoot(downloadDestination)))
+	console.info(
+		chalk.dim("Download destination:"),
+		chalk.bold(fromProjectRoot(downloadDestination)),
+	)
 	console.info()
 
 	await oraPromise(
@@ -95,5 +97,25 @@ export async function startBackend() {
 		await Bun.sleep(100)
 	}
 
-	return process
+	Bun.spawnSync(
+		[
+			"bun",
+			"convex",
+			"dev",
+			"--once",
+			"--admin-key",
+			"0135d8598650f8f5cb0f30c34ec2e2bb62793bc28717c8eb6fb577996d50be5f4281b59181095065c5d0f86a2c31ddbe9b597ec62b47ded69782cd",
+			"--url",
+			backendUrl,
+		],
+		{ stdout: "inherit", stderr: "inherit" },
+	)
+
+	return {
+		url: backendUrl,
+		async [Symbol.asyncDispose]() {
+			process.kill()
+			await process.exited
+		},
+	}
 }

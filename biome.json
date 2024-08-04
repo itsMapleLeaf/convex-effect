@@ -1,5 +1,8 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.8.0/schema.json",
+	"files": {
+		"ignore": ["**/node_modules/**", "**/convex/_generated/**"]
+	},
 	"organizeImports": {
 		"enabled": true
 	},
@@ -9,9 +12,7 @@
 			"recommended": true
 		}
 	},
-	"formatter": {
-		"lineWidth": 100
-	},
+	"formatter": {},
 	"javascript": {
 		"formatter": {
 			"semicolons": "asNeeded"
