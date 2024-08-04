@@ -25,11 +25,10 @@
   - [x] auth
   - [x] storage
   - [x] scheduler
-  - [ ] vector search
-  - [ ] `runQuery`
-  - [ ] `runMutation`
-  - [ ] `runAction`
-- [ ] context services
+  - [x] vector search
+  - [x] `runQuery`
+  - [x] `runMutation`
+  - [x] `runAction`
 
 ## ideas
 
@@ -37,3 +36,4 @@
 - serialize `Option` to null
   - and, subsequently, remove the `*OrNull` methods and return `Option` from the normal ones
 - streams
+- context services?
