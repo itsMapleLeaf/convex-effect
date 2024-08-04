@@ -2,6 +2,7 @@
 	"name": "convex-effect-monorepo",
 	"type": "module",
 	"scripts": {
+		"prepare": "bunx convex codegen && bun ./lib/convex-backend.ts download",
 		"lint": "biome lint .",
 		"format": "biome check . --write",
 		"typecheck": "bunx tsc --noEmit",
