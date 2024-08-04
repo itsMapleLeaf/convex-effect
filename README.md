@@ -16,21 +16,19 @@
 - query & mutation context
   - [x] database reader
   - [x] system database reader
-  - [ ] auth
-  - [ ] storage
-  - [ ] `runQuery`
+  - [x] auth
+  - [x] storage
 - mutation context
   - [x] database writer
   - [ ] scheduler
-  - [ ] `runMutation`
 - action context
+  - [x] auth
+  - [x] storage
+  - [ ] scheduler
+  - [ ] vector search
   - [ ] `runQuery`
   - [ ] `runMutation`
   - [ ] `runAction`
-  - [ ] auth
-  - [ ] storage
-  - [ ] scheduler
-  - [ ] vector search
 - [ ] context services
 
 ## ideas
