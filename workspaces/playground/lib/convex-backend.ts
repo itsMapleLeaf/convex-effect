@@ -13,7 +13,7 @@ const backendFolder = new URL("convex-backend/", projectRoot)
 const backendBin = new URL("convex-local-backend", backendFolder)
 const backendDataFolder = new URL("data/", backendFolder)
 
-const releaseTag = "precompiled-2024-05-29-e147dad"
+const releaseTag = "precompiled-2024-08-02-72f1835"
 
 function fromProjectRoot(fullPath: string | URL) {
 	const normalizedPath =
@@ -32,33 +32,6 @@ function getConvexBackendReleaseUrl() {
 		return new URL("convex-local-backend-x86_64-apple-darwin.zip", baseUrl)
 	}
 	return new URL("convex-local-backend-x86_64-unknown-linux-gnu.zip", baseUrl)
-}
-
-async function downloadConvexBackend() {
-	const url = getConvexBackendReleaseUrl()
-	const downloadDestination = new URL("release.zip", backendFolder)
-
-	console.info("ℹ️ Convex backend not found! Downloading.")
-	console.info()
-	console.info(chalk.dim("Release url:"), chalk.bold(url))
-	console.info(
-		chalk.dim("Download destination:"),
-		chalk.bold(fromProjectRoot(downloadDestination)),
-	)
-	console.info()
-
-	await oraPromise(
-		async () => await Bun.write(downloadDestination, await fetch(url)),
-		`Downloading Convex Backend from ${url.href}...`,
-	)
-
-	await oraPromise(
-		() =>
-			extract(fileURLToPath(downloadDestination), {
-				dir: fileURLToPath(backendFolder),
-			}),
-		"Extracting Convex Backend...",
-	)
 }
 
 function resolveBinaryPath() {
@@ -82,7 +55,9 @@ export async function startBackend() {
 	const binaryPath = resolveBinaryPath()
 
 	if (!existsSync(binaryPath)) {
-		await downloadConvexBackend()
+		throw new Error(
+			"Failed to find convex backend, make sure it's downloaded first!",
+		)
 	}
 
 	rmSync(backendDataFolder, { recursive: true, force: true })
@@ -111,11 +86,52 @@ export async function startBackend() {
 		{ stdout: "inherit", stderr: "inherit" },
 	)
 
+	console.info(`✓ Convex backend running at ${backendUrl}`)
+
 	return {
 		url: backendUrl,
 		async [Symbol.asyncDispose]() {
 			process.kill()
 			await process.exited
 		},
+	}
+}
+
+export async function downloadConvexBackend() {
+	const url = getConvexBackendReleaseUrl()
+	const downloadDestination = new URL("release.zip", backendFolder)
+
+	console.info("ℹ️ Convex backend not found! Downloading.")
+	console.info()
+	console.info(chalk.dim("Release url:"), chalk.bold(url))
+	console.info(
+		chalk.dim("Download destination:"),
+		chalk.bold(fromProjectRoot(downloadDestination)),
+	)
+	console.info()
+
+	const response = await oraPromise(
+		async () => await fetch(url),
+		`Downloading Convex Backend from ${url.href}...`,
+	)
+
+	await Bun.write(downloadDestination, await response.arrayBuffer())
+
+	await oraPromise(
+		() =>
+			extract(fileURLToPath(downloadDestination), {
+				dir: fileURLToPath(backendFolder),
+			}),
+		"Extracting Convex Backend...",
+	)
+}
+
+if (import.meta.main) {
+	const [command] = process.argv.slice(2)
+	if (command === "download") {
+		await downloadConvexBackend()
+	}
+	if (command === "start") {
+		await using _ = await startBackend()
 	}
 }
