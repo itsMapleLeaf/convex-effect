@@ -97,7 +97,7 @@ export function createServerApi<
 	DataModel extends GenericDataModel,
 >(): ServerApi<DataModel> {
 	return {
-		query(options) {
+		query: (options) => {
 			return queryGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
@@ -108,7 +108,7 @@ export function createServerApi<
 				},
 			})
 		},
-		internalQuery(options) {
+		internalQuery: (options) => {
 			return internalQueryGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
@@ -119,7 +119,7 @@ export function createServerApi<
 				},
 			})
 		},
-		mutation(options) {
+		mutation: (options) => {
 			return mutationGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
@@ -130,7 +130,7 @@ export function createServerApi<
 				},
 			})
 		},
-		internalMutation(options) {
+		internalMutation: (options) => {
 			return internalMutationGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
@@ -141,7 +141,7 @@ export function createServerApi<
 				},
 			})
 		},
-		action(options) {
+		action: (options) => {
 			return actionGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
@@ -152,7 +152,7 @@ export function createServerApi<
 				},
 			})
 		},
-		internalAction(options) {
+		internalAction: (options) => {
 			return internalActionGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
@@ -163,7 +163,7 @@ export function createServerApi<
 				},
 			})
 		},
-		httpAction(handler) {
+		httpAction: (handler) => {
 			return httpActionGeneric((ctx, request) => {
 				return pipe(
 					handler(new EffectActionCtx(ctx), request),
