@@ -1,7 +1,7 @@
 {
 	"name": "playground",
 	"scripts": {
-		"prepare": "bun lib/convex-backend.ts download",
+		"prepare": "convex codegen && bun lib/convex-backend.ts download",
 		"dev": "convex dev --tail-logs",
 		"build": "convex codegen",
 		"test": "bun test"
