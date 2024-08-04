@@ -44,6 +44,7 @@ export class EffectStorageWriter extends EffectStorageReader {
 	}
 }
 
-export class FileNotFound extends Data.TaggedError("FileNotFound")<{
+const _FileNotFound = Data.TaggedError("FileNotFound")
+export class FileNotFound extends _FileNotFound<{
 	storageId: GenericId<"_storage">
 }> {}

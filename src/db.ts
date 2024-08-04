@@ -12,6 +12,7 @@ import type {
 	IndexRangeBuilder,
 	NamedIndex,
 	NamedSearchIndex,
+	NamedTableInfo,
 	OrderedQuery,
 	PaginationOptions,
 	PaginationResult,
@@ -72,7 +73,9 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 		return Effect.sync(() => this.db.normalizeId(table, id))
 	}
 
-	query<TableName extends TableNamesInDataModel<DataModel>>(table: TableName) {
+	query<TableName extends TableNamesInDataModel<DataModel>>(
+		table: TableName,
+	): EffectQueryInitializer<NamedTableInfo<DataModel, TableName>> {
 		return new EffectQueryInitializer(this.db.query(table), table)
 	}
 }
@@ -91,7 +94,7 @@ export class OrderedEffectQuery<
 
 	filter(
 		predicate: (q: FilterBuilder<TableInfo>) => ExpressionOrValue<boolean>,
-	) {
+	): OrderedEffectQuery<TableInfo, Q> {
 		return new OrderedEffectQuery(this.query.filter(predicate), this.table)
 	}
 
@@ -144,7 +147,9 @@ export class EffectQuery<
 	TableInfo extends GenericTableInfo,
 	Q extends Query<TableInfo>,
 > extends OrderedEffectQuery<TableInfo, Q> {
-	order(order: "asc" | "desc") {
+	order(
+		order: "asc" | "desc",
+	): OrderedEffectQuery<TableInfo, OrderedQuery<TableInfo>> {
 		return new OrderedEffectQuery(this.query.order(order), this.table)
 	}
 }
@@ -152,7 +157,7 @@ export class EffectQuery<
 export class EffectQueryInitializer<
 	TableInfo extends GenericTableInfo,
 > extends EffectQuery<TableInfo, QueryInitializer<TableInfo>> {
-	fullTableScan() {
+	fullTableScan(): EffectQuery<TableInfo, Query<TableInfo>> {
 		return new EffectQuery(this.query.fullTableScan(), this.table)
 	}
 
@@ -164,7 +169,7 @@ export class EffectQueryInitializer<
 				NamedIndex<TableInfo, IndexName>
 			>,
 		) => IndexRange,
-	) {
+	): EffectQuery<TableInfo, Query<TableInfo>> {
 		return new EffectQuery(
 			this.query.withIndex(indexName, indexRange),
 			this.table,
@@ -179,7 +184,7 @@ export class EffectQueryInitializer<
 				NamedSearchIndex<TableInfo, IndexName>
 			>,
 		) => SearchFilter,
-	) {
+	): OrderedEffectQuery<TableInfo, OrderedQuery<TableInfo>> {
 		return new OrderedEffectQuery(
 			this.query.withSearchIndex(indexName, searchFilter),
 			this.table,
@@ -187,12 +192,14 @@ export class EffectQueryInitializer<
 	}
 }
 
-export class DocNotFound extends Data.TaggedError("DocNotFound")<{
+const _DocNotFound = Data.TaggedError("DocNotFound")
+export class DocNotFound extends _DocNotFound<{
 	id?: GenericId<string>
 	table?: string
 }> {}
 
-export class InvalidId extends Data.TaggedError("InvalidId")<{
+const _InvalidId = Data.TaggedError("InvalidId")
+export class InvalidId extends _InvalidId<{
 	table: string
 	id: string
 }> {}
