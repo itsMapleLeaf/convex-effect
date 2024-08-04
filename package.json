@@ -3,7 +3,7 @@
 	"type": "module",
 	"workspaces": ["./workspaces/*"],
 	"scripts": {
-		"lint": "biome check .",
+		"lint": "biome lint .",
 		"format": "biome check . --write",
 		"typecheck": "bunx tsc -b",
 		"test": "bun --filter '*' test",
