@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
-import { ConvexClient } from "convex/browser"
+import { ConvexHttpClient } from "convex/browser"
 import { asyncMap } from "shared/async.ts"
 import { startBackend } from "../lib/convex-backend.js"
 import { api } from "./_generated/api.js"
 
 test("crud", async () => {
 	await using backend = await startBackend()
-	const client = new ConvexClient(backend.url)
+	const client = new ConvexHttpClient(backend.url)
 
 	expect(await client.query(api.todos.list, {})).toEqual([])
 
