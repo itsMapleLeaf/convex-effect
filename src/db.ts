@@ -192,17 +192,16 @@ export class EffectQueryInitializer<
 	}
 }
 
-const _DocNotFound = Data.TaggedError("DocNotFound")
-export class DocNotFound extends _DocNotFound<{
+export class DocNotFound extends Data.Error<{
 	id?: GenericId<string>
 	table?: string
-}> {}
+}> {
+	readonly _tag = "DocNotFound"
+}
 
-const _InvalidId = Data.TaggedError("InvalidId")
-export class InvalidId extends _InvalidId<{
-	table: string
-	id: string
-}> {}
+export class InvalidId extends Data.Error<{ table: string; id: string }> {
+	readonly _tag = "InvalidId"
+}
 
 export class EffectDatabaseWriter<
 	DataModel extends GenericDataModel,

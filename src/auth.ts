@@ -22,4 +22,6 @@ export class EffectAuth {
 	}
 }
 
-export class NotLoggedIn extends Data.TaggedError("NotLoggedIn") {}
+export class NotLoggedIn extends Data.Error {
+	readonly _tag = "NotLoggedIn"
+}
