@@ -54,3 +54,14 @@ jobs:
         with:
           commit_message: "format"
           push_options: "--force-with-lease"
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # The OIDC ID token is used for authentication with JSR.
+    steps:
+      - name: Checkout 🛒
+        uses: actions/checkout@v4
+      - name: Publish 🚢
+        run: npx jsr publish
