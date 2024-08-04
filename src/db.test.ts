@@ -3,8 +3,6 @@ import type {
 	GenericDataModel,
 	GenericDatabaseReader,
 	GenericDatabaseWriter,
-	GenericTableInfo,
-	QueryInitializer,
 } from "convex/server"
 import type { GenericId } from "convex/values"
 import { Effect } from "effect"
