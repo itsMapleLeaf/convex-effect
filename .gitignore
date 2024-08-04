@@ -1,2 +1,5 @@
 node_modules
 *.tsbuildinfo
+/convex/_generated
+/convex-backend
+.env.local

@@ -1,4 +1,4 @@
-import { createServerApi } from "convex-effect"
+import { createServerApi } from "../src"
 import type { DataModel } from "./_generated/dataModel"
 
 export const {
