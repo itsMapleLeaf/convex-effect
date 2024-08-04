@@ -2,7 +2,9 @@
   "name": "convex-effect",
   "type": "module",
   "exports": "./src/index.ts",
-  "scripts": {},
+  "scripts": {
+    "release": "bunx jsr publish --allow-slow-types"
+  },
   "peerDependencies": {
     "convex": "*",
     "effect": "*"
