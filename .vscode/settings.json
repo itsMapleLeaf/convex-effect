@@ -9,6 +9,7 @@
 	"editor.formatOnSave": true,
 	"editor.codeActionsOnSave": {
 		"quickfix.biome": "explicit",
+		"source.organizeImports": "never",
 		"source.organizeImports.biome": "explicit"
 	}
 }

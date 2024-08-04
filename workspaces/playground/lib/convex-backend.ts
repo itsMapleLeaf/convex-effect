@@ -1,9 +1,9 @@
-import chalk from "chalk"
-import extract from "extract-zip"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import chalk from "chalk"
+import extract from "extract-zip"
 import { oraPromise } from "ora"
 
 export const backendUrl = "http://127.0.0.1:3210"

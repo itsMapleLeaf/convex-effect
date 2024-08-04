@@ -1,20 +1,20 @@
 {
-  "name": "convex-effect",
-  "type": "module",
-  "exports": "./src/index.ts",
-  "scripts": {
-    "release": "bunx jsr publish --allow-slow-types"
-  },
-  "peerDependencies": {
-    "convex": "*",
-    "effect": "*"
-  },
-  "dependencies": {
-    "iterator-helpers-polyfill": "^3.0.1",
-    "type-fest": "^4.23.0"
-  },
-  "devDependencies": {
-    "convex": "^1.13.2",
-    "effect": "^3.6.0"
-  }
+	"name": "convex-effect",
+	"type": "module",
+	"exports": "./src/index.ts",
+	"scripts": {
+		"release": "bunx jsr publish --allow-slow-types"
+	},
+	"peerDependencies": {
+		"convex": "*",
+		"effect": "*"
+	},
+	"dependencies": {
+		"iterator-helpers-polyfill": "^3.0.1",
+		"type-fest": "^4.23.0"
+	},
+	"devDependencies": {
+		"convex": "^1.13.2",
+		"effect": "^3.6.0"
+	}
 }
