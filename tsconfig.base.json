@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
 		"allowJs": true,
+		"composite": true,
 		"jsx": "react-jsx",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"module": "Preserve",
@@ -13,9 +14,6 @@
 		"noPropertyAccessFromIndexSignature": true,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"paths": {
-			"convex-effect": ["./src/index.ts"]
-		},
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "ESNext",

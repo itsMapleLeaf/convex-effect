@@ -1,0 +1,7 @@
+{
+	"files": [],
+	"references": [
+		{ "path": "./workspaces/convex-effect" },
+		{ "path": "./workspaces/playground" }
+	]
+}

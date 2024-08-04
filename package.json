@@ -1,11 +1,19 @@
 {
-  "name": "convex-effect-monorepo",
-  "type": "module",
-  "workspaces": ["./workspaces/*"],
-  "devDependencies": {
-    "@biomejs/biome": "^1.8.0",
-    "@types/bun": "1.1.3",
-    "@types/node": "^20.14.2",
-    "typescript": "5.4.5"
-  }
+	"name": "convex-effect-monorepo",
+	"type": "module",
+	"workspaces": ["./workspaces/*"],
+	"scripts": {
+		"lint": "biome check .",
+		"format": "biome check . --write",
+		"typecheck": "bunx tsc -b",
+		"test": "bun --filter '*' test",
+		"checks": "npm-run-all --continue-on-error lint typecheck test"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.8.0",
+		"@types/bun": "1.1.3",
+		"@types/node": "^20.14.2",
+		"npm-run-all": "^4.1.5",
+		"typescript": "5.4.5"
+	}
 }

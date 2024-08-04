@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConvexHttpClient } from "convex/browser"
-import { asyncMap } from "shared/async.ts"
+import { asyncMap } from "../lib/async.ts"
 import { startBackend } from "../lib/convex-backend.js"
 import { api } from "./_generated/api.js"
 

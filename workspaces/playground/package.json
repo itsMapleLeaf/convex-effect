@@ -1,20 +1,19 @@
 {
-  "name": "playground",
-  "scripts": {
-    "prepare": "bun lib/convex-backend.ts download",
-    "dev": "convex dev --tail-logs",
-    "build": "convex codegen",
-    "test": "bun test"
-  },
-  "dependencies": {
-    "convex": "^1.13.2",
-    "convex-effect": "workspace:*",
-    "effect": "^3.6.0",
-    "shared": "workspace:*"
-  },
-  "devDependencies": {
-    "chalk": "^5.3.0",
-    "extract-zip": "^2.0.1",
-    "ora": "^8.0.1"
-  }
+	"name": "playground",
+	"scripts": {
+		"prepare": "bun lib/convex-backend.ts download",
+		"dev": "convex dev --tail-logs",
+		"build": "convex codegen",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"convex": "^1.13.2",
+		"convex-effect": "workspace:*",
+		"effect": "^3.6.0"
+	},
+	"devDependencies": {
+		"chalk": "^5.3.0",
+		"extract-zip": "^2.0.1",
+		"ora": "^8.0.1"
+	}
 }
