@@ -46,7 +46,8 @@ export class EffectStorageWriter extends EffectStorageReader {
 }
 
 export class FileNotFound extends YieldableError {
-	readonly _tag = "FileNotFound"
+	// biome-ignore lint/style: workaround for typegen bug
+	readonly _tag: "FileNotFound" = "FileNotFound"
 
 	constructor(readonly info: { storageId: GenericId<"_storage"> }) {
 		super()

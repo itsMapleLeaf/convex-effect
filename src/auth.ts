@@ -24,5 +24,6 @@ export class EffectAuth {
 }
 
 export class NotLoggedIn extends YieldableError {
-	readonly _tag = "NotLoggedIn"
+	// biome-ignore lint/style: workaround for typegen bug
+	readonly _tag: "NotLoggedIn" = "NotLoggedIn"
 }
