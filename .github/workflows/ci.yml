@@ -1,0 +1,55 @@
+name: CI
+on:
+  push:
+    branches: main
+  pull_request:
+
+jobs:
+  ci:
+    name: ${{ matrix.script }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        script:
+          - lint
+          - typecheck
+          - test
+      fail-fast: false
+    steps:
+      - name: Checkout 🛒
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 🐰
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies 📦
+        run: bun install
+
+      - name: Run ${{ matrix.script }} ▶️
+        run: bun run ${{ matrix.script }}
+  format:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout 🛒
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 🐰
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies 📦
+        run: bun install
+
+      - name: Format 🧹
+        run: bun run format
+
+      - name: Commit 💾
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "format"
+          push_options: "--force-with-lease"
