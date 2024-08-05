@@ -1,0 +1,5 @@
+- [Convex Auth](https://labs.convex.dev/auth) wrappers?
+- serialize `Option` to null
+  - and, subsequently, remove the `*OrNull` methods and return `Option` from the normal ones
+- streams
+- context services?
