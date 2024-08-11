@@ -1,4 +1,4 @@
-# convex-effect [![JSR](https://jsr.io/badges/@maple/convex-effect)](https://jsr.io/package/@maple/convex-effect)
+# convex-effect [![JSR](https://jsr.io/badges/@maple/convex-effect)](https://jsr.io/@maple/convex-effect)
 
 A simple, thin, [Effectful](https://effect.website) wrapper for [Convex](https://convex.dev).
 
