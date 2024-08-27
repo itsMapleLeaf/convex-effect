@@ -1,49 +1,48 @@
 import { expect, test } from "bun:test"
-import { ConvexHttpClient } from "convex/browser"
-import { asyncMap } from "../lib/async.ts"
 import { startBackend } from "../lib/convex-backend.js"
 import { api } from "./_generated/api.js"
 
 test("crud", async () => {
 	await using backend = await startBackend()
-	const client = new ConvexHttpClient(backend.url)
 
-	expect(await client.query(api.todos.list, {})).toEqual([])
+	expect(await backend.client.query(api.todos.list, {})).toEqual([])
 
-	const items = await asyncMap(
-		[{ text: "jupiter" }, { text: "saturn" }, { text: "mars" }],
-		async (item) => {
-			const id = await client.mutation(api.todos.create, item)
-			return { ...item, _id: id, completed: false }
-		},
+	const inputs = [{ text: "jupiter" }, { text: "saturn" }, { text: "mars" }]
+	const docs = []
+	for (const item of inputs) {
+		const id = await backend.client.mutation(api.todos.create, item)
+		docs.push({ ...item, _id: id, completed: false })
+	}
+
+	expect(await backend.client.query(api.todos.list, {})).toEqual(
+		docs.map((item) => expect.objectContaining(item)),
 	)
 
-	expect(await client.query(api.todos.list, {})).toEqual(
-		items.map((item) => expect.objectContaining(item)),
+	expect(await backend.client.query(api.todos.getFirst, {})).toEqual(
+		expect.objectContaining(docs[0]),
 	)
 
-	expect(await client.query(api.todos.getFirst, {})).toEqual(
-		expect.objectContaining(items[0]),
-	)
-
-	for (const item of items) {
-		expect(await client.query(api.todos.get, { id: item._id })).toEqual(
+	for (const item of docs) {
+		expect(await backend.client.query(api.todos.get, { id: item._id })).toEqual(
 			expect.objectContaining(item),
 		)
 	}
 
-	await client.mutation(api.todos.update, { id: items[0]._id, completed: true })
-	await client.mutation(api.todos.remove, { id: items[1]._id })
+	await backend.client.mutation(api.todos.update, {
+		id: docs[0]._id,
+		completed: true,
+	})
+	await backend.client.mutation(api.todos.remove, { id: docs[1]._id })
 
-	expect(await client.query(api.todos.list, {})).toEqual([
-		expect.objectContaining({ ...items[0], completed: true }),
-		expect.objectContaining(items[2]),
+	expect(await backend.client.query(api.todos.list, {})).toEqual([
+		expect.objectContaining({ ...docs[0], completed: true }),
+		expect.objectContaining(docs[2]),
 	])
 
-	expect(await client.query(api.todos.getFirst, {})).toEqual(
-		expect.objectContaining({ ...items[0], completed: true }),
+	expect(await backend.client.query(api.todos.getFirst, {})).toEqual(
+		expect.objectContaining({ ...docs[0], completed: true }),
 	)
-	expect(await client.query(api.todos.getLatest, {})).toEqual(
-		expect.objectContaining(items[2]),
+	expect(await backend.client.query(api.todos.getLatest, {})).toEqual(
+		expect.objectContaining(docs[2]),
 	)
 })
