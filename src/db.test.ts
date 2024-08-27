@@ -7,7 +7,7 @@ import type {
 import type { GenericId } from "convex/values"
 import { Effect } from "effect"
 import {
-	DocNotFound,
+	DocNotFoundById,
 	EffectDatabaseReader,
 	EffectDatabaseWriter,
 	InvalidId,
@@ -36,14 +36,14 @@ test("EffectDatabaseReader.get returns the document if present", async () => {
 	})
 })
 
-test("EffectDatabaseReader.get fails with DocNotFound if not present", async () => {
+test("EffectDatabaseReader.get fails with DocNotFoundById if not present", async () => {
 	const reader = new EffectDatabaseReader({
 		get: async () => null,
 	} as unknown as GenericDatabaseReader<MockDataModel>)
 
 	expect(
 		reader.get(mockId).pipe(Effect.merge, Effect.runPromise),
-	).resolves.toBeInstanceOf(DocNotFound)
+	).resolves.toBeInstanceOf(DocNotFoundById)
 })
 
 test("EffectDatabaseReader.getOrNull returns the document if present", async () => {

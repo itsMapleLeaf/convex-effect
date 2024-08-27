@@ -26,8 +26,9 @@ import type {
 	WithoutSystemFields,
 } from "convex/server"
 import type { GenericId } from "convex/values"
-import { Data, Effect } from "effect"
+import { Effect } from "effect"
 import type { DistributedOmit } from "type-fest"
+import { ConvexEffectError } from "./errors.ts"
 
 export type BaseDatabaseReader<DataModel extends GenericDataModel> =
 	DistributedOmit<GenericDatabaseReader<DataModel>, "system">
@@ -41,11 +42,15 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 
 	get<TableName extends TableNamesInDataModel<DataModel>>(
 		id: GenericId<TableName>,
-	): Effect.Effect<DocumentByName<DataModel, TableName>, DocNotFound, never> {
+	): Effect.Effect<
+		DocumentByName<DataModel, TableName>,
+		DocNotFoundById<TableName>,
+		never
+	> {
 		return Effect.filterOrFail(
 			this.getOrNull(id),
 			(doc): doc is DocumentByName<DataModel, TableName> => doc != null,
-			() => new DocNotFound({ id }),
+			() => new DocNotFoundById(id),
 		)
 	}
 
@@ -58,11 +63,11 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 	normalizeId<TableName extends TableNamesInDataModel<DataModel>>(
 		table: TableName,
 		id: string,
-	): Effect.Effect<GenericId<TableName>, InvalidId, never> {
+	): Effect.Effect<GenericId<TableName>, InvalidId<TableName>, never> {
 		return Effect.filterOrFail(
 			this.normalizeIdOrNull(table, id),
 			(id): id is GenericId<TableName> => id != null,
-			() => new InvalidId({ table, id }),
+			() => new InvalidId(table, id),
 		)
 	}
 
@@ -75,26 +80,26 @@ export class EffectDatabaseReader<DataModel extends GenericDataModel> {
 
 	query<TableName extends TableNamesInDataModel<DataModel>>(
 		table: TableName,
-	): EffectQueryInitializer<NamedTableInfo<DataModel, TableName>> {
+	): EffectQueryInitializer<NamedTableInfo<DataModel, TableName>, TableName> {
 		return new EffectQueryInitializer(this.db.query(table), table)
 	}
 }
 
 export class OrderedEffectQuery<
 	TableInfo extends GenericTableInfo,
-	Q extends OrderedQuery<TableInfo>,
+	Table extends string,
 > {
-	protected readonly query: Q
-	protected readonly table: string
+	protected readonly query: OrderedQuery<TableInfo>
+	protected readonly table: Table
 
-	constructor(query: Q, table: string) {
+	constructor(query: OrderedQuery<TableInfo>, table: Table) {
 		this.query = query
 		this.table = table
 	}
 
 	filter(
 		predicate: (q: FilterBuilder<TableInfo>) => ExpressionOrValue<boolean>,
-	): OrderedEffectQuery<TableInfo, Q> {
+	): OrderedEffectQuery<TableInfo, Table> {
 		return new OrderedEffectQuery(this.query.filter(predicate), this.table)
 	}
 
@@ -114,11 +119,15 @@ export class OrderedEffectQuery<
 		return Effect.promise(() => this.query.take(n))
 	}
 
-	first(): Effect.Effect<DocumentByInfo<TableInfo>, DocNotFound, never> {
+	first(): Effect.Effect<
+		DocumentByInfo<TableInfo>,
+		DocNotFoundInTable<Table>,
+		never
+	> {
 		return Effect.filterOrFail(
 			Effect.promise(() => this.query.first()),
 			(doc): doc is DocumentByInfo<TableInfo> => doc != null,
-			() => new DocNotFound({ table: this.table }),
+			() => new DocNotFoundInTable(this.table),
 		)
 	}
 
@@ -126,11 +135,15 @@ export class OrderedEffectQuery<
 		return Effect.promise(() => this.query.first())
 	}
 
-	unique(): Effect.Effect<DocumentByInfo<TableInfo>, DocNotFound, never> {
+	unique(): Effect.Effect<
+		DocumentByInfo<TableInfo>,
+		DocNotFoundInTable<Table>,
+		never
+	> {
 		return Effect.filterOrFail(
 			this.uniqueOrNull(),
 			(doc): doc is DocumentByInfo<TableInfo> => doc != null,
-			() => new DocNotFound({ table: this.table }),
+			() => new DocNotFoundInTable(this.table),
 		)
 	}
 
@@ -145,19 +158,32 @@ export class OrderedEffectQuery<
 
 export class EffectQuery<
 	TableInfo extends GenericTableInfo,
-	Q extends Query<TableInfo>,
-> extends OrderedEffectQuery<TableInfo, Q> {
-	order(
-		order: "asc" | "desc",
-	): OrderedEffectQuery<TableInfo, OrderedQuery<TableInfo>> {
+	Table extends string,
+> extends OrderedEffectQuery<TableInfo, Table> {
+	override readonly query: Query<TableInfo>
+
+	constructor(query: Query<TableInfo>, table: Table) {
+		super(query, table)
+		this.query = query
+	}
+
+	order(order: "asc" | "desc"): OrderedEffectQuery<TableInfo, Table> {
 		return new OrderedEffectQuery(this.query.order(order), this.table)
 	}
 }
 
 export class EffectQueryInitializer<
 	TableInfo extends GenericTableInfo,
-> extends EffectQuery<TableInfo, QueryInitializer<TableInfo>> {
-	fullTableScan(): EffectQuery<TableInfo, Query<TableInfo>> {
+	Table extends string,
+> extends EffectQuery<TableInfo, Table> {
+	override readonly query: QueryInitializer<TableInfo>
+
+	constructor(query: QueryInitializer<TableInfo>, table: Table) {
+		super(query, table)
+		this.query = query
+	}
+
+	fullTableScan(): EffectQuery<TableInfo, Table> {
 		return new EffectQuery(this.query.fullTableScan(), this.table)
 	}
 
@@ -169,7 +195,7 @@ export class EffectQueryInitializer<
 				NamedIndex<TableInfo, IndexName>
 			>,
 		) => IndexRange,
-	): EffectQuery<TableInfo, Query<TableInfo>> {
+	): EffectQuery<TableInfo, Table> {
 		return new EffectQuery(
 			this.query.withIndex(indexName, indexRange),
 			this.table,
@@ -184,7 +210,7 @@ export class EffectQueryInitializer<
 				NamedSearchIndex<TableInfo, IndexName>
 			>,
 		) => SearchFilter,
-	): OrderedEffectQuery<TableInfo, OrderedQuery<TableInfo>> {
+	): OrderedEffectQuery<TableInfo, Table> {
 		return new OrderedEffectQuery(
 			this.query.withSearchIndex(indexName, searchFilter),
 			this.table,
@@ -192,23 +218,40 @@ export class EffectQueryInitializer<
 	}
 }
 
-export class DocNotFound extends Data.Error<{
-	id?: GenericId<string>
-	table?: string
-}> {
+export class DocNotFoundInTable<T extends string> extends ConvexEffectError {
 	// biome-ignore lint/style: workaround for typegen bug
-	readonly _tag: "DocNotFound" = "DocNotFound"
+	readonly _tag: "DocNotFoundInTable" = "DocNotFoundInTable"
+
+	constructor(readonly table: T) {
+		super(`No document found in table "${table}".`)
+	}
 }
 
-export class InvalidId extends Data.Error<{ table: string; id: string }> {
+export class DocNotFoundById<T extends string> extends ConvexEffectError {
+	// biome-ignore lint/style: workaround for typegen bug
+	readonly _tag: "DocNotFoundById" = "DocNotFoundById"
+
+	constructor(readonly id: GenericId<T>) {
+		super(`No document found with id "${id}".`)
+	}
+}
+
+export class InvalidId<T extends string> extends ConvexEffectError {
 	// biome-ignore lint/style: workaround for typegen bug
 	readonly _tag: "InvalidId" = "InvalidId"
+
+	constructor(
+		readonly table: T,
+		readonly id: string,
+	) {
+		super(`Invalid id "${id}" for table "${table}".`)
+	}
 }
 
 export class EffectDatabaseWriter<
 	DataModel extends GenericDataModel,
 > extends EffectDatabaseReader<DataModel> {
-	protected readonly db: GenericDatabaseWriter<DataModel>
+	protected override readonly db: GenericDatabaseWriter<DataModel>
 
 	constructor(db: GenericDatabaseWriter<DataModel>) {
 		super(db)

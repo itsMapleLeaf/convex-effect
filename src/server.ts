@@ -15,13 +15,14 @@ import {
 	mutationGeneric,
 	queryGeneric,
 } from "convex/server"
-import type { PropertyValidators } from "convex/values"
-import { Effect, pipe } from "effect"
+import { ConvexError, type PropertyValidators } from "convex/values"
+import { Cause, Effect, Exit } from "effect"
 import {
 	EffectActionCtx,
 	EffectMutationCtx,
 	EffectQueryCtx,
 } from "./context.ts"
+import { ConvexEffectError } from "./errors.ts"
 
 export type EffectQueryBuilder<
 	DataModel extends GenericDataModel,
@@ -101,9 +102,8 @@ export function createServerApi<
 			return queryGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
-					return pipe(
+					return runConvexEffect(
 						options.handler(new EffectQueryCtx(ctx), ...args),
-						Effect.runPromise,
 					)
 				},
 			})
@@ -112,9 +112,8 @@ export function createServerApi<
 			return internalQueryGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
-					return pipe(
+					return runConvexEffect(
 						options.handler(new EffectQueryCtx(ctx), ...args),
-						Effect.runPromise,
 					)
 				},
 			})
@@ -123,9 +122,8 @@ export function createServerApi<
 			return mutationGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
-					return pipe(
+					return runConvexEffect(
 						options.handler(new EffectMutationCtx(ctx), ...args),
-						Effect.runPromise,
 					)
 				},
 			})
@@ -134,9 +132,8 @@ export function createServerApi<
 			return internalMutationGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
-					return pipe(
+					return runConvexEffect(
 						options.handler(new EffectMutationCtx(ctx), ...args),
-						Effect.runPromise,
 					)
 				},
 			})
@@ -145,9 +142,8 @@ export function createServerApi<
 			return actionGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
-					return pipe(
+					return runConvexEffect(
 						options.handler(new EffectActionCtx(ctx), ...args),
-						Effect.runPromise,
 					)
 				},
 			})
@@ -156,20 +152,49 @@ export function createServerApi<
 			return internalActionGeneric({
 				args: options.args,
 				handler(ctx, ...args) {
-					return pipe(
+					return runConvexEffect(
 						options.handler(new EffectActionCtx(ctx), ...args),
-						Effect.runPromise,
 					)
 				},
 			})
 		},
 		httpAction: (handler) => {
 			return httpActionGeneric((ctx, request) => {
-				return pipe(
-					handler(new EffectActionCtx(ctx), request),
-					Effect.runPromise,
-				)
+				return runConvexEffect(handler(new EffectActionCtx(ctx), request))
 			})
 		},
 	}
+}
+
+export async function runConvexEffect<T>(
+	effect: Effect.Effect<T, unknown, never>,
+): Promise<T> {
+	const exit = await Effect.runPromiseExit(effect)
+
+	if (Exit.isSuccess(exit)) {
+		return exit.value
+	}
+
+	if (Cause.isFailType(exit.cause)) {
+		if (exit.cause.error instanceof ConvexEffectError) {
+			throw new ConvexError(exit.cause.error.message)
+		}
+		throw exit.cause.error
+	}
+
+	if (Cause.isDieType(exit.cause)) {
+		if (exit.cause.defect instanceof ConvexEffectError) {
+			throw new ConvexError(exit.cause.defect.message)
+		}
+		throw exit.cause.defect
+	}
+
+	console.error(
+		"[convex-effect] Encountered unknown error cause type:",
+		exit.cause[Cause.CauseTypeId],
+	)
+	console.error(
+		"[convex-effect] You should catch this cause type yourself if you want a better error message.",
+	)
+	throw exit.cause
 }

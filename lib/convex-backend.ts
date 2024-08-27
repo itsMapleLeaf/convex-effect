@@ -3,6 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import chalk from "chalk"
+import { ConvexHttpClient } from "convex/browser"
 import extract from "extract-zip"
 import { oraPromise } from "ora"
 
@@ -88,8 +89,14 @@ export async function startBackend() {
 
 	console.info(`✓ Convex backend running at ${backendUrl}`)
 
+	let client: ConvexHttpClient
+
 	return {
 		url: backendUrl,
+		get client() {
+			client ??= new ConvexHttpClient(backendUrl)
+			return client
+		},
 		async [Symbol.asyncDispose]() {
 			process.kill()
 			await process.exited
