@@ -29,7 +29,7 @@ export class EffectStorageReader {
 }
 
 export class EffectStorageWriter extends EffectStorageReader {
-	protected readonly storage: StorageWriter
+	protected override readonly storage: StorageWriter
 
 	constructor(storage: StorageWriter) {
 		super(storage)

@@ -40,9 +40,9 @@ export class EffectQueryCtx<DataModel extends GenericDataModel> {
 export class EffectMutationCtx<
 	DataModel extends GenericDataModel,
 > extends EffectQueryCtx<DataModel> {
-	readonly internal: GenericMutationCtx<DataModel>
-	readonly db: EffectDatabaseWriter<DataModel>
-	readonly storage: EffectStorageWriter
+	override readonly internal: GenericMutationCtx<DataModel>
+	override readonly db: EffectDatabaseWriter<DataModel>
+	override readonly storage: EffectStorageWriter
 	readonly scheduler: EffectScheduler
 
 	constructor(ctx: GenericMutationCtx<DataModel>) {
